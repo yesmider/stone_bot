@@ -3,7 +3,7 @@ import cv2 as cv
 import numpy as np
 import time
 #20 680  56*56
-
+#
 def get_stone_table(pic):
     #gray = cv.cvtColor(pic, cv.COLOR_RGB2GRAY)
     gray = pic

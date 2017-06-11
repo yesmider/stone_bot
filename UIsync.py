@@ -5,11 +5,18 @@ import time
 #import tempfile as tf
 #from pynput import keyboard
 # todo keyboard listener
+# todo autodetect and donate coin to clan
 class Stone_UI:
+    """
+    this class is for UI detection
+    """
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1"):
         self.controller = elem.controller(dnpath,emulator_name)
         self.temp = 'temp.png'
         self.img_refresh()
+        self.screenshot()
+        self.img =cv2.imread(self.temp) # img in RGB
+        self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV) #in HSV
 
     def screenshot(self):
         con = self.controller
@@ -18,11 +25,15 @@ class Stone_UI:
 
     def img_refresh(self):
         self.screenshot()
-        self.img =cv2.imread(self.temp)
-        self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV)
+        self.img =cv2.imread(self.temp) # img in RGB
+        self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV) #in HSV
 
 
     def check_ruby_box(self):
+        """
+        checking ruby box on the right side , using the sift to  compare the bottom icon of ruby bot
+        :return:  the axis of ruby box touch point
+        """
         ruby_box = self.img[910:940,138:169]
         ruby_area = self.img[400:650,0:80]
         sift = cv2.xfeatures2d.SIFT_create()
@@ -52,24 +63,36 @@ class Stone_UI:
             return None
 
     def check_mining_or_mob(self):
-        mining = cv2.imread('mining.png')
+        """
+        check player is in mining fields or mod fields
+        :return: string : mob or mining
+        """
+        mining = cv2.imread('pics/mining.png')
         if mining is None:
             while mining is not None:
                 self.img_refresh()
-                mining = cv2.imread('mining.png')
+                mining = cv2.imread('pics/mining.png')
 
         if np.equal(self.img[196:198,344:346].all(),mining.all()):
             return 'mob'
         else:
             return 'mining'
     def check_clan_windows(self):
-        clan = cv2.imread('clan.png')
-        if np.array_equal(self.img[122:137,254:286],clan) :
+        """
+        check the clan title in the clan tabs
+        :return: truth
+        """
+        clan = cv2.imread('pics/clan.png')
+        if np.array_equal(self.img[122:137,254:286],clan):
             return True
         else:
             return False
     def check_stone_box_statue(self):
         #  X = 495 1 690 720 2 745 770 3 850 880 4 900 935
+        """
+        check the stone box UI is Turn on or not.
+        :return: truth
+        """
         x = 495
         y_axis1 = [690,745,850,900]
         y_axis2 = [720,770,880,935]
@@ -90,12 +113,20 @@ class Stone_UI:
         else:
             return None
     def check_pop_box_statue(self):
+        """
+        detect the pop box
+        :return: truth
+        """
         if self.check_stone_box_statue() is None:
             return True
         else:
             return False
 
     def check_auto_attack_statue(self):
+        """
+        check the auto attack statue , # stone box must be Turn off
+        :return: truth , None if the stone box is turned on.
+        """
         if self.check_stone_box_statue() is False:
             if self.pic[850,430].item(0) == 19 and self.pic[850,490].item(0) == 19:
                 return True
@@ -112,9 +143,9 @@ class Stone_UI:
 
     def __stone_table(self,pic):
         """
-
+        cut the screenshots into the pic of stone, one by one
         :param pic: must be RGB
-        :return:
+        :return:list of stone
         """
         x,y = 20,680
         stone_list = []
@@ -127,7 +158,12 @@ class Stone_UI:
         return stone_list
 
     def __stone_table_truth(self,stone_table):
-        blank = cv2.cvtColor(cv2.imread('blank.png'), cv2.COLOR_RGB2GRAY)
+        """
+
+        :param stone_table: the table generate from __stone_table
+        :return:truth_table of stone
+        """
+        blank = cv2.cvtColor(cv2.imread('pics/blank.png'), cv2.COLOR_RGB2GRAY)
         truth_table = []
         for x in stone_table:
             temp_list = []
@@ -143,10 +179,22 @@ class Stone_UI:
         return truth_table
 
     def x_y_to_pixel(self,x,y):
+        """
+        x and y is the axis of stone in stone table
+        :param x: the axis x of stone in stone table
+        :param y: the axis y of stone in stone table
+        :return: x,y in the screenshots
+        """
         p_x = x * 56 + 56 / 2 + 20
         p_y = y * 56 + 56 / 2 + 680
         return p_x, p_y
     def compare_stone(self,stone,stone_table):
+        """
+
+        :param stone:
+        :param stone_table:
+        :return:
+        """
         sift = cv2.xfeatures2d.SIFT_create()
         kp1,des1 = sift.detectAndCompute(stone,None)
         FLANN_INDEX_KDTREE = 0
@@ -175,6 +223,10 @@ class Stone_UI:
                     # cv2.destroyAllWindows()
         return good_index
     def check_stone_pairs(self):
+        """
+
+        :return:
+        """
         stone_table = self.__stone_table(self.img)
         truth_table = self.__stone_table_truth(stone_table)
         pairs = []

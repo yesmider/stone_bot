@@ -2,6 +2,7 @@ import configparser
 import UIsync
 # todo emulator restart
 config = configparser.ConfigParser()
+# config file decoding
 try:
     config.read('config.ini')
 except UnicodeDecodeError:
@@ -16,6 +17,6 @@ if path[-1] is not "\\":
     config['config']['emulator_path'] = path
     with open('config.ini','w') as configfile:
         config.write(configfile)
-
+# main thread
 UI = UIsync.UI_controll(path,name)
 UI.main()
