@@ -1,6 +1,6 @@
 import configparser
 import UIsync
-# todo emulator restart
+
 config = configparser.ConfigParser()
 # config file decoding
 try:
@@ -12,11 +12,13 @@ except UnicodeDecodeError:
         config.read('config.ini',encoding='UTF-8-SIG')
 name = config['config']['emulator_name']
 path = config['config']['emulator_path']
+reboot_timer = config['config']['reboot_timer']
 if path[-1] is not "\\":
     path += "\\"
     config['config']['emulator_path'] = path
     with open('config.ini','w') as configfile:
         config.write(configfile)
+
 # main thread
 UI = UIsync.UI_controll(path,name)
-UI.main()
+UI.main(reboot_timer)

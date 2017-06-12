@@ -53,13 +53,14 @@ class dn:
                 raise Exception(opt)
         else:
             raise Exception("method not support")
-    def adb(self, method, n, cmd):
+    def adb(self, method, n, cmd,print_call_back = 1):
         command = self.root + "adb "+"--"+method+" "+str(n)+" --command "+ '"'+cmd+'"'
         #print(cmd)
         if method == "index" or method == "name":
             logging.info('emulator {} by method {} - {}'.format(n,method,cmd))
             opt = subprocess.check_output(command)
-            logging.info('call back : {}'.format(opt))
+            if print_call_back == 1:
+                logging.info('call back : {}'.format(opt))
             return opt
         else:
             raise Exception("method not support")
@@ -71,10 +72,10 @@ class dn:
             logging.info('checking emulator {} running statue'.format(n))
             if opt == b'running':
                 logging.info('emulator {} is running'.format(n))
-                return 1
+                return True
             elif opt == b'stop':
                 logging.info('emulator {} is not running.'.format(n))
-                return 0
+                return False
         else:
             raise Exception("method not support")
     # def list:

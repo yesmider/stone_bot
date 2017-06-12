@@ -302,14 +302,14 @@ class UI_controll(Stone_UI):
             print('stone combine')
             for pair in pairs:
                 temp_list = []
-                if len(pair) % 2 == 0:
-                    for index, value in enumerate(pair[::-1]):
-                        if value not in temp_list and pair[::-1][index - 1] not in temp_list:
-                            x1, y1 = value
-                            x2, y2 = pair[::-1][index - 1]
-                            self.controller.swipe(x1, y1, x2, y2, 200)
-                            temp_list.append((x1, y1))
-                            temp_list.append((x2, y2))
+                for index, value in enumerate(pair[::-1]):
+                    if value not in temp_list and pair[::-1][index - 1] not in temp_list:
+                        x1, y1 = value
+                        x2, y2 = pair[::-1][index - 1]
+                        self.controller.swipe(x1, y1, x2, y2, 200)
+                        temp_list.append((x1, y1))
+                        temp_list.append((x2, y2))
+
 
 
     def Clan_exp_up(self):
@@ -334,7 +334,7 @@ class UI_controll(Stone_UI):
             x,y = xy
             self.controller.touch(x,y)
 
-    def main(self):
+    def main(self,reboot_timer):
         while 1:
             try:
                 self.img_refresh()
@@ -361,11 +361,20 @@ class UI_controll(Stone_UI):
                 with open('error.txt','w+') as errorfile:
                     errorfile.write(str(error))
                 time.sleep(5)
+            self.REBOOT(reboot_timer)
+
+    def REBOOT(self,reboot_time):
+        if time.time() - self.START_TIMER > int(reboot_time)*60*60:
+            self.controller.reboot()
+            # while 1:
+            #     time.sleep(1)
+            #     print(self.controller.get_now_activity_windows())
+            while self.controller.get_now_activity_windows() != "net.supercat.stone/net.supercat.stone.MainActivity":
+                time.sleep(10)
+                self.controller.launch_app('net.supercat.stone')
 
 
-    # def REBOOT(self,reboot_time):
-    #     if time.time() - self.START_TIMER > reboot_time:
-    #         self.controller.
+
     # def on_press(self,key):
     #     if key == keyboard.KeyCode(char='p'):
     #         self.toggle = not self.toggle
@@ -376,8 +385,8 @@ class UI_controll(Stone_UI):
     #             print('Unpause')
 if __name__ =="__main__":
     UI = UI_controll()
-
-    UI.check_stone_pairs()
+    time.sleep(1)
+    UI.REBOOT(0)
     # with keyboard.Listener(on_press=UI.on_press)as listener:
     #     listener.join()
 
