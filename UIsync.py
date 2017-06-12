@@ -302,13 +302,14 @@ class UI_controll(Stone_UI):
             print('stone combine')
             for pair in pairs:
                 temp_list = []
-                for index, value in enumerate(pair[::-1]):
-                    if value not in temp_list:
-                        x1, y1 = value
-                        x2, y2 = pair[::-1][index - 1]
-                        self.controller.swipe(x1, y1, x2, y2, 200)
-                        temp_list.append((x1, y1))
-                        temp_list.append((x2, y2))
+                if len(pair) % 2 == 0:
+                    for index, value in enumerate(pair[::-1]):
+                        if value not in temp_list and pair[::-1][index - 1] not in temp_list:
+                            x1, y1 = value
+                            x2, y2 = pair[::-1][index - 1]
+                            self.controller.swipe(x1, y1, x2, y2, 200)
+                            temp_list.append((x1, y1))
+                            temp_list.append((x2, y2))
 
 
     def Clan_exp_up(self):
@@ -340,16 +341,16 @@ class UI_controll(Stone_UI):
                 if self.check_mining_or_mob() == 'mining':
                     self.close_pop_box()
                     self.Turn_on_auto_attack()
-                    self.Clan_exp_up()
+                    #self.Clan_exp_up()
                     self.get_reward()
                     self.click_ruby_box()
                     self.Turn_on_stone_box()
                     self.stone_combine()
-                    time.sleep(5)
+                    time.sleep(3)
                 else:
                     self.close_pop_box()
                     self.Turn_on_auto_attack()
-                    self.Clan_exp_up()
+                    #self.Clan_exp_up()
                     self.get_reward()
                     self.click_ruby_box()
                     self.Turn_on_stone_box()

@@ -78,23 +78,23 @@ class controller(Element):
         super(controller,self).__init__(path,name)
 
     def screenshot(self,filepath = '/sdcard/temp.png'):
-        # self.dn.adb('name', self.device, 'wait-for-device')
+        self.dn.adb('name', self.device, 'wait-for-device')
         self.dn.adb("name",self.device,"shell screencap -p {}".format(filepath))
 
 
     def pull(self,targetfile,filename):
-        # self.dn.adb('name', self.device, 'wait-for-device')
+        self.dn.adb('name', self.device, 'wait-for-device')
         self.dn.adb("name",self.device,'pull {} {}'.format(targetfile,filename))
 
     def pull_screenshot(self,target_file = '/sdcard/temp.png',file_name = 'temp.png'):
         self.dn.adb("name", self.device, 'pull {} {}'.format(target_file, file_name))
 
     def swipe(self,x1,y1,x2,y2,duration):
-        #self.dn.adb('name', self.device, 'wait-for-device')
+        self.dn.adb('name', self.device, 'wait-for-device')
         self.dn.adb("name",self.device,'shell input swipe {} {} {} {} {}'.format(x1,y1,x2,y2,duration))
 
     def keyevent(self,key):
-        #self.dn.adb('name',self.device, 'wait-for-device')
+        self.dn.adb('name',self.device, 'wait-for-device')
         self.dn.adb("name",self.device,'shell input keyevent {}'.format(key))
 
 
