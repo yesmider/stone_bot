@@ -97,6 +97,24 @@ class controller(Element):
         self.dn.adb('name',self.device, 'wait-for-device')
         self.dn.adb("name",self.device,'shell input keyevent {}'.format(key))
 
+    def get_now_activity_windows(self):
+        while self.dn.isrunning('name',self.device) is False:
+            time.sleep(20)
+        p = re.compile(r"mSurface=Surface\(name=[a-zA-Z0-9\.]+/[a-zA-Z0-9\.]+")
+        call_back = str(self.dn.adb('name',self.device,' shell dumpsys window windows',print_call_back=0))
+        name = p.findall(call_back)
+        if len(name) >0:
+            name = name[0].replace('mSurface=Surface(name=','')
+            return name
+        else:
+            return None
+    def reboot(self):
+        self.dn.reboot('name',self.device)
+
+    def launch_app(self,apk):
+        self.dn.runapp('name',self.device,apk)
+
+
 
 
 
