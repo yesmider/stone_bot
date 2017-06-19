@@ -415,12 +415,12 @@ class UI_controll(Stone_UI):
     def close_pop_box(self):
         self.img_refresh()
         while self.check_pop_box_statue():
-            if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0  ) == 19:
-                self.quiz_handler()
-                time.sleep(30)
-                self.img_refresh()
+            # if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0) == 19:
+            #     self.quiz_handler()
+            #     time.sleep(30)
+            #     self.img_refresh()
 
-            else:
+            # else:
                 print('pop')
                 time.sleep(10)
                 self.controller.keyevent("04")
@@ -507,8 +507,8 @@ class UI_controll(Stone_UI):
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
-                        self.get_reward()
-                        self.click_ruby_box()
+                        # self.get_reward()
+                        # self.click_ruby_box()
                         self.Turn_on_stone_box()
                         self.stone_combine()
                         time.sleep(ran)
@@ -516,8 +516,8 @@ class UI_controll(Stone_UI):
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
-                        self.get_reward()
-                        self.click_ruby_box()
+                        # self.get_reward()
+                        # self.click_ruby_box()
                         self.Turn_on_stone_box()
                         # self.stone_combine()
                         time.sleep(ran)
