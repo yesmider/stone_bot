@@ -503,24 +503,24 @@ class UI_controll(Stone_UI):
                 try:
                     ran = random.randint(2, 15)
                     self.img_refresh()
-                    if self.check_mining_or_mob() == 'mining':
-                        self.close_pop_box()
-                        self.Turn_on_auto_attack()
+                    # if self.check_mining_or_mob() == 'mining':
+                    self.close_pop_box()
+                    self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
                         # self.get_reward()
                         # self.click_ruby_box()
-                        self.Turn_on_stone_box()
-                        self.stone_combine()
-                        time.sleep(ran)
-                    else:
-                        self.close_pop_box()
-                        self.Turn_on_auto_attack()
-                        # self.Clan_exp_up()
-                        # self.get_reward()
-                        # self.click_ruby_box()
-                        self.Turn_on_stone_box()
-                        # self.stone_combine()
-                        time.sleep(ran)
+                    self.Turn_on_stone_box()
+                    self.stone_combine()
+                    time.sleep(ran)
+                    # else:
+                    #     self.close_pop_box()
+                    #     self.Turn_on_auto_attack()
+                    #     # self.Clan_exp_up()
+                    #     # self.get_reward()
+                    #     # self.click_ruby_box()
+                    #     self.Turn_on_stone_box()
+                    #     # self.stone_combine()
+                    #     time.sleep(ran)
                 except Exception as error:
                     print(error)
                     with open('error.txt', 'w+') as errorfile:
