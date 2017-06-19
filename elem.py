@@ -121,6 +121,8 @@ class controller(Element):
 
 
 
+
+
 if __name__ == "__main__":
     root = "C:\ChangZhi2\dnplayer2\\"
     con = controller(root,"3")
