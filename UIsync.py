@@ -415,7 +415,7 @@ class UI_controll(Stone_UI):
     def close_pop_box(self):
         self.img_refresh()
         while self.check_pop_box_statue():
-            if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0  ) == 19:
+            if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0) == 19:
                 self.quiz_handler()
                 time.sleep(30)
                 self.img_refresh()
