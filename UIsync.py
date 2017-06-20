@@ -76,15 +76,18 @@ class Stone_UI:
         for [value] in good:
             x = kp2[value.trainIdx].pt[0]
             if x < x0:
-                vote[1]+= 1
+                vote[1] += 1
             elif x0 < x < x1:
                 vote[1] += 2
                 vote[2] += 1
             elif x1 < x < x2:
+                vote[1] += 1
                 vote[2] += 2
-
+                vote[3] += 1
             elif x2 < x < x3:
+                vote[2] += 1
                 vote[3] += 2
+                vote[4] += 1
             elif x3 < x < x4:
                 vote[3] += 1
                 vote[4] += 2
@@ -358,7 +361,8 @@ class Stone_UI:
         k = list(main_vote.keys())
         print(main_vote)
         ans = k[v.index(max(v))]
-        cv2.imwrite('ans/{}-{}.png'.format(ans, main_vote[ans]), self.img)
+        value = "{}-{}-{}-{}".format(v[0],v[1],v[2],v[3])
+        cv2.imwrite('ans/{}-{}-{}.png'.format(ans, main_vote[ans],value), self.img)
         return v,ans
 
 
@@ -389,9 +393,9 @@ class UI_controll(Stone_UI):
         print('save quiz')
 
         v,ans = self.vote_quiz()
-        if max(v) > 100:
+        if max(v) > 50:
             self.controller.touch(button[ans][0], button[ans][1])
-        elif 100 >= max(v):
+        elif 50 >= max(v):
             print('vote not enough \n do multi vote')
             multi_vote = {
                 2:0,
