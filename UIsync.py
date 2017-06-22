@@ -533,33 +533,33 @@ class UI_controll(Stone_UI):
                     else:
                         ran = 2
                     self.img_refresh()
-                    if self.check_mining_or_mob() == 'mining':
-                        if self.check_rain() is True:
-                            self.buster = 1
-                            if time.time() - fast_mining_time > 180:
-                                print("click_fast_mining")
-                                self.click_fast_mining_one()
-                                fast_mining_time = time.time()
-                        else:
-                            self.buster = 0
-                        self.close_pop_box()
-                        self.Turn_on_auto_attack()
-                        # self.Clan_exp_up()
-                        self.get_reward()
-                        self.click_ruby_box()
-                        self.Turn_on_stone_box()
-                        self.stone_combine()
-                        time.sleep(ran)
+                    # if self.check_mining_or_mob() == 'mining':
+                    if self.check_rain() is True:
+                        self.buster = 1
+                        if time.time() - fast_mining_time > 180:
+                            print("click_fast_mining")
+                            self.click_fast_mining_one()
+                            fast_mining_time = time.time()
                     else:
                         self.buster = 0
-                        self.close_pop_box()
-                        self.Turn_on_auto_attack()
-                        # self.Clan_exp_up()
-                        self.get_reward()
-                        self.click_ruby_box()
-                        self.Turn_on_stone_box()
-                        # self.stone_combine()
-                        time.sleep(ran)
+                    self.close_pop_box()
+                    self.Turn_on_auto_attack()
+                    # self.Clan_exp_up()
+                    # self.get_reward()
+                    # self.click_ruby_box()
+                    self.Turn_on_stone_box()
+                    self.stone_combine()
+                    time.sleep(ran)
+                    # else:
+                    #     self.buster = 0
+                    #     self.close_pop_box()
+                    #     self.Turn_on_auto_attack()
+                    #     # self.Clan_exp_up()
+                    #     self.get_reward()
+                    #     self.click_ruby_box()
+                    #     self.Turn_on_stone_box()
+                    #     # self.stone_combine()
+                    #     time.sleep(ran)
                 except Exception as error:
                     print(error)
                     with open('error.txt', 'w+') as errorfile:
