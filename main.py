@@ -1,6 +1,6 @@
 import configparser
 import UIsync
-
+import os
 config = configparser.ConfigParser()
 # config file decoding
 try:
@@ -20,5 +20,9 @@ if path[-1] is not "\\":
         config.write(configfile)
 
 # main thread
-UI = UIsync.UI_controll(path,name)
-UI.main(reboot_timer)
+try:
+    UI = UIsync.UI_controll(path,name)
+    UI.main(reboot_timer)
+except Exception as exc:
+    print(exc)
+    os.system('pause')
