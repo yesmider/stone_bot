@@ -12,7 +12,7 @@ class Element:
         self.filedir = tempfile.gettempdir()+"\\uidump.xml"
         self.pattern = re.compile(r"\d+")
         while self.dn.isrunning("name", self.device) != 1:
-            self.dn.launch(name)
+            self.dn.launch('name',name)
             time.sleep(5)
     def __uidump(self):
         #self.dn.adb("name",self.device,"wait-for-device ")

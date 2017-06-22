@@ -30,13 +30,14 @@ class Stone_UI:
         self.img =cv2.imread(self.temp) # img in RGB
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV)#in HSV
         self.gray = cv2.cvtColor(self.img, cv2.COLOR_RGB2GRAY)
+
     def check_game_active(self):
         if self.controller.get_now_activity_windows() == "net.supercat.stone/net.supercat.stone.MainActivity":
             return True
         else:
             return False
 
-    def chekc_quiz_pop(self):
+    def check_quiz_pop(self):
         origin = cv2.cvtColor(self.img[490:553, 225:305],cv2.COLOR_RGB2GRAY)
         runners = cv2.cvtColor(self.img[362:475, 39:500],cv2.COLOR_RGB2GRAY)
         ret1, origin = cv2.threshold(origin, 0, 255, cv2.THRESH_BINARY)
@@ -64,9 +65,7 @@ class Stone_UI:
         for m, n in matches:
             if m.distance < 0.7 * n.distance:
                 good.append([m])
-        draw_params = dict(matchColor=(0, 255, 0),
-                           singlePointColor=(255, 0, 0),
-                           flags=2)
+
         vote = {
             1:0,
             2:0,
@@ -94,6 +93,9 @@ class Stone_UI:
             elif x4 < x:
                 vote[4] += 1
 
+        draw_params = dict(matchColor=(0, 255, 0),
+                           singlePointColor=(255, 0, 0),
+                           flags=2)
         img3 = cv2.drawMatchesKnn(origin, kp1, runners, kp2, good, None, **draw_params)
         return img3,vote
 
@@ -131,7 +133,7 @@ class Stone_UI:
         else:
             return None
     def check_fast_mining(self):
-        fast_mining = cv2.imread('test.png')
+        fast_mining = cv2.imread('pics/fast_mining.png')
         ruby_area = self.img[400:650,0:80]
         sift = cv2.xfeatures2d.SIFT_create()
         kp1, des1 = sift.detectAndCompute(fast_mining, None)
@@ -142,20 +144,19 @@ class Stone_UI:
         flann = cv2.FlannBasedMatcher(index_params, search_params)
         good_index = []
         matches = flann.knnMatch(des1, des2, k=2)
-        print(len(matches))
         good = []
         for m, n in matches:
             if m.distance < 0.7 * n.distance:
-                good.append(m)
-        print(good)
+                good.append([m])
+        # print(good)
         if len(good) >= 1:
             x = 0
             y = 0
-            for value in good:
+            for [value] in good:
                 x += kp2[value.trainIdx].pt[0]
                 y += kp2[value.trainIdx].pt[1]
             x = x/len(good)
-            y = y / len(good)
+            y = y/len(good)
             return x,y+400
         else:
             return None
@@ -307,7 +308,7 @@ class Stone_UI:
                 for m, n in matches:
                     if m.distance < 0.4 * n.distance:
                         good.append(m)
-                if len(good) >= 5:
+                if len(good) >=5:
                     good_index.append(self.x_y_to_pixel(x,y))
                     # src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
                     # dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
@@ -350,7 +351,7 @@ class Stone_UI:
         count = 0
         while count <= 50:
             print('run', str(count))
-            quiz, vote = self.chekc_quiz_pop()
+            quiz, vote = self.check_quiz_pop()
             # cv2.imwrite('quiz/{}.png'.format(time.time()), quiz)
             for key in vote.keys():
                 main_vote[key] += vote[key]
@@ -362,10 +363,15 @@ class Stone_UI:
         print(main_vote)
         ans = k[v.index(max(v))]
         value = "{}-{}-{}-{}".format(v[0],v[1],v[2],v[3])
-        cv2.imwrite('ans/{}-{}-{}.png'.format(ans, main_vote[ans],value), self.img)
+        cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
         return v,ans
 
-
+    def check_rain(self):
+        if self.pic[146,337].item(0) == 0:
+            print('it\'s raining')
+            return True
+        else:
+            return False
 class UI_controll(Stone_UI):
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1"):
         super(UI_controll,self).__init__(dnpath,emulator_name)
@@ -374,7 +380,7 @@ class UI_controll(Stone_UI):
         self.clan_exp = 0
         self.START_TIMER = time.time()
         self.main_locker = 0
-
+        self.buster = 0
     def get_reward(self):
         if self.check_reward_statue():
             print('get reward')
@@ -393,9 +399,11 @@ class UI_controll(Stone_UI):
         print('save quiz')
 
         v,ans = self.vote_quiz()
-        if max(v) > 50:
+        std = np.std(v)
+        print('std = ',std)
+        if std > 40:
             self.controller.touch(button[ans][0], button[ans][1])
-        elif 50 >= max(v):
+        elif 40 > std > 20:
             print('vote not enough \n do multi vote')
             multi_vote = {
                 2:0,
@@ -414,14 +422,15 @@ class UI_controll(Stone_UI):
             ans = k[v.index(max(v))]
             print("multi vote ans = {}".format(ans))
             self.controller.touch(button[ans][0], button[ans][1])
-
+        else:
+            print('need human detect')
 
     def close_pop_box(self):
         self.img_refresh()
         while self.check_pop_box_statue():
             if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0) == 19:
                 self.quiz_handler()
-                time.sleep(30)
+                time.sleep(10)
                 self.img_refresh()
 
             else:
@@ -501,13 +510,34 @@ class UI_controll(Stone_UI):
             x,y = xy
             self.controller.touch(x,y)
 
+    def click_fast_mining_one(self):
+        self.img_refresh()
+        xy = self.check_fast_mining()
+        if xy:
+            x,y = xy
+            self.controller.touch(x,y)
+            time.sleep(1)
+            self.controller.touch(200,565)
+
     def main(self,reboot_timer):
+        fast_mining_time = 0
         while 1:
             if self.check_game_active() is True:
                 try:
-                    ran = random.randint(2, 15)
+                    if self.buster == 0:
+                        ran = random.randint(2, 30)
+                    else:
+                        ran = 2
                     self.img_refresh()
                     if self.check_mining_or_mob() == 'mining':
+                        if self.check_rain() is True:
+                            self.buster = 1
+                            if time.time() - fast_mining_time > 180:
+                                print("click_fast_mining")
+                                self.click_fast_mining_one()
+                                fast_mining_time = time.time()
+                        else:
+                            self.buster = 0
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
@@ -517,6 +547,7 @@ class UI_controll(Stone_UI):
                         self.stone_combine()
                         time.sleep(ran)
                     else:
+                        self.buster = 0
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
@@ -558,7 +589,7 @@ class UI_controll(Stone_UI):
 if __name__ =="__main__":
     UI = UI_controll()
     UI.main(999)
-
+    # UI.check_fast_mining()
 
 
 
