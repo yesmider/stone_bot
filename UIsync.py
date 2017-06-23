@@ -20,6 +20,7 @@ class Stone_UI:
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV) #in HSV
         self.gray = cv2.cvtColor(self.img,cv2.COLOR_RGB2GRAY)
         self.quiz_banner = cv2.imread('pics/quiz_banner.png')
+        self.ad = None
     def screenshot(self):
         con = self.controller
         con.screenshot(filepath='/sdcard/Misc/temp.png')
@@ -99,7 +100,6 @@ class Stone_UI:
         img3 = cv2.drawMatchesKnn(origin, kp1, runners, kp2, good, None, **draw_params)
         return img3,vote
 
-
     def check_ruby_box(self):
         """
         checking ruby box on the right side , using the sift to  compare the bottom icon of ruby bot
@@ -132,6 +132,7 @@ class Stone_UI:
             return x,y+400
         else:
             return None
+
     def check_fast_mining(self):
         fast_mining = cv2.imread('pics/fast_mining.png')
         ruby_area = self.img[400:650,0:80]
@@ -160,6 +161,7 @@ class Stone_UI:
             return x,y+400
         else:
             return None
+
     def check_mining_or_mob(self):
         """
         check player is in mining fields or mod fields
@@ -175,6 +177,7 @@ class Stone_UI:
             return 'mob'
         else:
             return 'mining'
+
     def check_clan_windows(self):
         """
         check the clan title in the clan tabs
@@ -286,6 +289,7 @@ class Stone_UI:
         p_x = x * 56 + 56 / 2 + 20
         p_y = y * 56 + 56 / 2 + 680
         return p_x, p_y
+
     def compare_stone(self,stone,stone_table):
         """
 
@@ -366,12 +370,17 @@ class Stone_UI:
         cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
         return v,ans
 
-    def check_rain(self):
-        if self.pic[146,337].item(0) == 0:
+    def check_rain(self,ad):
+        if ad is False:
+            check_poing = self.pic[146,337].item(0)
+        else:
+            check_poing = self.pic[56,337].item(0)
+        if check_poing == 0:
             print('it\'s raining')
             return True
         else:
             return False
+
 class UI_controll(Stone_UI):
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1"):
         super(UI_controll,self).__init__(dnpath,emulator_name)
@@ -523,7 +532,7 @@ class UI_controll(Stone_UI):
             time.sleep(1)
             self.controller.touch(200,565)
 
-    def main(self,reboot_timer):
+    def main(self,reboot_timer,ad_remove = True):
         fast_mining_time = 0
         while 1:
             if self.check_game_active() is True:
@@ -533,8 +542,8 @@ class UI_controll(Stone_UI):
                     else:
                         ran = 2
                     self.img_refresh()
-                    # if self.check_mining_or_mob() == 'mining':
-                    if self.check_rain() is True:
+
+                    if self.check_rain(ad_remove) is True:
                         self.buster = 1
                         if time.time() - fast_mining_time > 180:
                             print("click_fast_mining")
@@ -544,22 +553,9 @@ class UI_controll(Stone_UI):
                         self.buster = 0
                     self.close_pop_box()
                     self.Turn_on_auto_attack()
-                    # self.Clan_exp_up()
-                    # self.get_reward()
-                    # self.click_ruby_box()
                     self.Turn_on_stone_box()
                     self.stone_combine()
                     time.sleep(ran)
-                    # else:
-                    #     self.buster = 0
-                    #     self.close_pop_box()
-                    #     self.Turn_on_auto_attack()
-                    #     # self.Clan_exp_up()
-                    #     self.get_reward()
-                    #     self.click_ruby_box()
-                    #     self.Turn_on_stone_box()
-                    #     # self.stone_combine()
-                    #     time.sleep(ran)
                 except Exception as error:
                     print(error)
                     with open('error.txt', 'w+') as errorfile:

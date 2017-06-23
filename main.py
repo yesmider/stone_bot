@@ -3,6 +3,7 @@ import UIsync
 import os
 config = configparser.ConfigParser()
 # config file decoding
+# todo check img shape
 try:
     config.read('config.ini')
 except UnicodeDecodeError:
@@ -13,6 +14,7 @@ except UnicodeDecodeError:
 name = config['config']['emulator_name']
 path = config['config']['emulator_path']
 reboot_timer = config['config']['reboot_timer']
+ad_remove = config['config']['ad_remove']
 if path[-1] is not "\\":
     path += "\\"
     config['config']['emulator_path'] = path
@@ -22,7 +24,7 @@ if path[-1] is not "\\":
 # main thread
 try:
     UI = UIsync.UI_controll(path,name)
-    UI.main(reboot_timer)
+    UI.main(reboot_timer,ad_remove)
 except Exception as exc:
     print(exc)
     os.system('pause')
