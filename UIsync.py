@@ -372,17 +372,12 @@ class Stone_UI:
         cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
         return v,ans
 
-    def check_rain(self,ad):
-        if ad is False:
-            check_poing = self.pic[146,337].item(0)
-        else:
-            check_poing = self.pic[56,337].item(0)
-        if check_poing == 0:
+    def check_rain(self):
+        if self.pic[146,337].item(0) == 0:
             print('it\'s raining')
             return True
         else:
             return False
-
 class UI_controll(Stone_UI):
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1"):
         super(UI_controll,self).__init__(dnpath,emulator_name)
@@ -530,30 +525,44 @@ class UI_controll(Stone_UI):
             time.sleep(1)
             self.controller.touch(200,565)
 
-    def main(self,reboot_timer,ad_remove = True):
+    def main(self,reboot_timer):
         fast_mining_time = 0
         while 1:
             if self.check_game_active() is True:
                 try:
-                    if self.buster == 0:
-                        ran = random.randint(2, 30)
-                    else:
-                        ran = 2
                     self.img_refresh()
-
-                    if self.check_rain(ad_remove) is True:
-                        self.buster = 1
-                        if time.time() - fast_mining_time > 180:
-                            print("click_fast_mining")
-                            self.click_fast_mining_one()
-                            fast_mining_time = time.time()
+                    if self.check_mining_or_mob() == 'mining':
+                        if self.check_rain() is True:
+                            self.buster = 1
+                            if time.time() - fast_mining_time > 180:
+                                print("click_fast_mining")
+                                self.click_fast_mining_one()
+                                fast_mining_time = time.time()
+                        else:
+                            self.buster = 0
+                        if self.buster == 0:
+                            ran = random.randint(2, 15)
+                        else:
+                            ran = 2
+                        self.close_pop_box()
+                        self.Turn_on_auto_attack()
+                        # self.Clan_exp_up()
+                        self.get_reward()
+                        self.click_ruby_box()
+                        self.Turn_on_stone_box()
+                        self.stone_combine()
+                        time.sleep(ran)
                     else:
+                        ran = random.randint(2, 15)
                         self.buster = 0
-                    self.close_pop_box()
-                    self.Turn_on_auto_attack()
-                    self.Turn_on_stone_box()
-                    self.stone_combine()
-                    time.sleep(ran)
+                        self.close_pop_box()
+                        self.Turn_on_auto_attack()
+                        # self.Clan_exp_up()
+                        self.get_reward()
+                        self.click_ruby_box()
+                        self.Turn_on_stone_box()
+                        # self.stone_combine()
+                        time.sleep(ran)
                 except Exception as error:
                     print(error)
                     with open('error.txt', 'w+') as errorfile:
@@ -587,7 +596,7 @@ class UI_controll(Stone_UI):
 if __name__ =="__main__":
     UI = UI_controll()
     UI.main(999)
-
+    # UI.check_fast_mining()
 
 
 
