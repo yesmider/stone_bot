@@ -372,8 +372,12 @@ class Stone_UI:
         cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
         return v,ans
 
-    def check_rain(self):
-        if self.pic[146,337].item(0) == 0:
+    def check_rain(self,ad):
+        if ad is False:
+            check_poing = self.pic[146,337].item(0)
+        else:
+            check_poing = self.pic[56,337].item(0)
+        if check_poing == 0:
             print('it\'s raining')
             return True
         else:
@@ -525,14 +529,14 @@ class UI_controll(Stone_UI):
             time.sleep(1)
             self.controller.touch(200,565)
 
-    def main(self,reboot_timer):
+    def main(self,reboot_timer,ad_remove = True):
         fast_mining_time = 0
         while 1:
             if self.check_game_active() is True:
                 try:
                     self.img_refresh()
                     if self.check_mining_or_mob() == 'mining':
-                        if self.check_rain() is True:
+                        if self.check_rain(ad_remove) is True:
                             self.buster = 1
                             if time.time() - fast_mining_time > 180:
                                 print("click_fast_mining")
@@ -573,6 +577,39 @@ class UI_controll(Stone_UI):
                     self.controller.launch_app('net.supercat.stone')
             self.REBOOT(reboot_timer)
 
+    def public_main(self,reboot_timer,ad_remove = True):
+        fast_mining_time = 0
+        while 1:
+            if self.check_game_active() is True:
+                try:
+                    if self.buster == 0:
+                        ran = random.randint(2, 30)
+                    else:
+                        ran = 2
+                    self.img_refresh()
+
+                    if self.check_rain(ad_remove) is True:
+                        self.buster = 1
+                        if time.time() - fast_mining_time > 180:
+                            print("click_fast_mining")
+                            self.click_fast_mining_one()
+                            fast_mining_time = time.time()
+                    else:
+                        self.buster = 0
+                    self.close_pop_box()
+                    self.Turn_on_auto_attack()
+                    self.Turn_on_stone_box()
+                    self.stone_combine()
+                    time.sleep(ran)
+                except Exception as error:
+                    print(error)
+                    with open('error.txt', 'w+') as errorfile:
+                        errorfile.write(str(error))
+                    time.sleep(5)
+            else:
+                while self.check_game_active() is False:
+                    self.controller.launch_app('net.supercat.stone')
+            self.REBOOT(reboot_timer)
 
     def REBOOT(self,reboot_time):
         """
