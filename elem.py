@@ -114,7 +114,8 @@ class controller(Element):
     def launch_app(self,apk):
         self.dn.runapp('name',self.device,apk)
 
-
+    def kill_app(self,apk):
+        self.dn.killapp('name',self.device,apk)
 
 
 

@@ -81,6 +81,16 @@ class dn:
                 return False
         else:
             raise Exception("method not support")
+
+    def killapp(self,method,n,apk_name):
+        command = self.root +"killapp "+"--"+method+" "+str(n)+" --packagename "+apk_name
+        if method == 'index' or method == 'name':
+            opt = subprocess.check_output(command)
+            logging.debug('killapp {} on emulator {} by {} method'.format(apk_name, n, method))
+            if opt != b"":
+                raise Exception(opt)
+            else:
+                raise Exception("method not support")
     # def list:
     #
     # def runninglist:
@@ -100,8 +110,7 @@ class dn:
     #
     # def uninstallapp:
     #
-    # def killapp:
-    #
+
     # def locate:
     #
 

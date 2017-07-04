@@ -4,6 +4,8 @@ import elem
 import time
 import random
 import logging
+import os
+import sys
 #import tempfile as tf
 #from pynput import keyboard
 # todo keyboard listener
@@ -19,6 +21,28 @@ class Stone_UI:
         self.img =cv2.imread(self.temp) # img in RGB
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV) #in HSV
         self.quiz_banner = cv2.imread('pics/quiz_banner.png')
+        self.KAZE = cv2.KAZE_create()
+        self.BF = cv2.BFMatcher()
+        self.train_path = 'color_train'
+        self.pic_dict = {
+        }
+        self.train_init()
+    def train_init(self):
+        train = [f for f in os.listdir(self.train_path) if os.path.isdir(os.path.join(self.train_path, f)) and f != 'compare']
+        for dir in train:
+            l = []
+            full_path = os.path.join(self.train_path, dir)
+            files = [os.path.join(full_path, f) for f in os.listdir(full_path) if
+                     os.path.isfile(os.path.join(full_path, f))]
+            for file in files:
+                logging.info('loading file - {}'.format(file))
+                img = cv2.imread(file)
+                # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                # ret1, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY)
+                kp, des = self.KAZE.detectAndCompute(img, None)
+                l.append((img, kp, des))
+            self.pic_dict[dir] = l
+        logging.info('train_data_init done.')
     def screenshot(self):
         con = self.controller
         con.screenshot(filepath='/sdcard/Misc/temp.png')
@@ -53,19 +77,13 @@ class Stone_UI:
         dist = e / np.sum(e)
         return dist
     def check_quiz_pop(self):
-        origin = cv2.cvtColor(self.img[490:553, 225:305],cv2.COLOR_BGR2GRAY)
-        runners = cv2.cvtColor(self.img[362:475, 39:500],cv2.COLOR_BGR2GRAY)
-        ret1, origin = cv2.threshold(origin, 0, 255, cv2.THRESH_BINARY)
-        ret2, runners = cv2.threshold(runners, 80, 255, cv2.THRESH_BINARY)
-        SURF = cv2.xfeatures2d.SURF_create()
-        kp1, des1 = SURF.detectAndCompute(origin, None)
-        kp2, des2 = SURF.detectAndCompute(runners, None)
-        FLANN_INDEX_KDTREE = 0
-        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=4)
-        search_params = dict(checks=100)
-        flann = cv2.FlannBasedMatcher(index_params, search_params)
+        runners = self.img[362:475, 39:500]
+        origin = self.img[490:590, 225:315]
+
+        kp1, des1 = self.KAZE.detectAndCompute(origin, None)
+        kp2, des2 = self.KAZE.detectAndCompute(runners, None)
+        # check runners bound box postion
         range_x = []
-        matches = flann.knnMatch(des1, des2, k=2)
         for value in kp2:
             x = value.pt[0]
             range_x.append(x)
@@ -75,44 +93,75 @@ class Stone_UI:
         max_x, min_x = mean_range + std_range * 1.5, mean_range - std_range * 1.5
         x0, x1, x2, x3, x4 = min_x, (max_x - min_x) / 4 + min_x, (max_x - min_x) / 2 + min_x, (
         max_x - min_x) * 3 / 4 + min_x, max_x
-
-        good = []
-        for m, n in matches:
-            if m.distance < 0.7 * n.distance:
-                good.append([m])
-
-        vote = {
-            1:0,
-            2:0,
-            3:0,
-            4:0
+        # check origin ans
+        ans_dict = {
+            '0': 0,
+            '1': 0,
+            '2': 0,
+            '3': 0,
+            '4': 0,
+            '5': 0,
+            '6': 0
         }
-        for [value] in good:
-            x = kp2[value.trainIdx].pt[0]
-            if x < x0:
-                vote[1] += 1
-            elif x0 < x < x1:
-                vote[1] += 2
-                vote[2] += 1
-            elif x1 < x < x2:
-                vote[1] += 1
-                vote[2] += 2
-                vote[3] += 1
-            elif x2 < x < x3:
-                vote[2] += 1
-                vote[3] += 2
-                vote[4] += 1
-            elif x3 < x < x4:
-                vote[3] += 1
-                vote[4] += 2
-            elif x4 < x:
-                vote[4] += 1
+        for key,value in self.pic_dict.items():
+            for img,kp,des in value:
+                matches = self.BF.knnMatch(des1,des,k=2)
+                good = []
+                for m,n in matches:
+                    if m.distance < 0.7 * n.distance:
+                        good.append([m])
+                ans_dict[key] += len(good)
+        v = list(ans_dict.values())
+        k = list(ans_dict.keys())
+        ans = k[v.index(max(v))]
+        print(ans_dict)
+        # use ans result to compare runners
+        for img,kp,des in self.pic_dict[ans]:
+            matches = self.BF.knnMatch(des,des2,k=2)
+            good = []
+            for m, n in matches:
+                if m.distance < 0.8 * n.distance:
+                    good.append([m])
+
+            vote = {
+                1: 0,
+                2: 0,
+                3: 0,
+                4: 0
+            }
+            # print(len(good))
+            if len(good)>1:
+                for [value] in good:
+                    x = kp2[value.trainIdx].pt[0]
+                    if x < x0:
+                        vote[1] += 1
+                    elif x0 < x < x1:
+                        vote[1] += 2
+                        vote[2] += 1
+                    elif x1 < x < x2:
+                        vote[1] += 1
+                        vote[2] += 2
+                        vote[3] += 1
+                    elif x2 < x < x3:
+                        vote[2] += 1
+                        vote[3] += 2
+                        vote[4] += 1
+                    elif x3 < x < x4:
+                        vote[3] += 1
+                        vote[4] += 2
+                    elif x4 < x:
+                        vote[4] += 1
 
         draw_params = dict(matchColor=(0, 255, 0),
                            singlePointColor=(255, 0, 0),
                            flags=2)
-        img3 = cv2.drawMatchesKnn(origin, kp1, runners, kp2, good, None, **draw_params)
-        return img3,vote
+        img3 = cv2.drawMatchesKnn(img, kp, runners, kp2, good, None, **draw_params)
+        print(vote)
+        return img3, vote
+
+
+
+
 
     def check_ruby_box(self):
         """
@@ -186,7 +235,7 @@ class Stone_UI:
                 self.img_refresh()
                 mining = cv2.imread('pics/mining.png')
 
-        if np.equal(self.img[196:198,344:346].all(),mining.all()):
+        if np.equal(self.img[196:198,344:346],mining).all():
             return 'mob'
         else:
             return 'mining'
@@ -461,7 +510,9 @@ class UI_controll(Stone_UI):
 
     def close_pop_box(self,solve_quiz = True):
         self.img_refresh()
+        count = 0
         while self.check_pop_box_statue() and self.check_game_active():
+            count += 1
             if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0) == 19 and solve_quiz is True:
                 logging.info('There is a Quiz,Solving......')
                 self.quiz_handler()
@@ -474,6 +525,9 @@ class UI_controll(Stone_UI):
                 self.controller.keyevent("04")
                 time.sleep(1)
                 self.img_refresh()
+            if count > 10:
+                self.controller.kill_app('net.supercat.stone')
+                break
         if self.check_stone_box_statue() is False:
             self.auto_attack = 0
 
@@ -562,7 +616,7 @@ class UI_controll(Stone_UI):
                     self.img_refresh()
                     if self.check_mining_or_mob() == 'mining':
                         logging.info('bot is doing mining thread.')
-                        if self.check_rain(ad_remove) is True and fast_mining_time is False:
+                        if self.check_rain(ad_remove) is True:
                             self.buster = 1
                             if time.time() - fast_mining_time > 180:
                                 logging.info('bot try to click fasting mining.')
@@ -578,8 +632,8 @@ class UI_controll(Stone_UI):
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
-                        # self.get_reward()
-                        # self.click_ruby_box()
+                        self.get_reward()
+                        self.click_ruby_box()
                         self.Turn_on_stone_box()
                         self.stone_combine()
                         time.sleep(ran)
@@ -589,12 +643,13 @@ class UI_controll(Stone_UI):
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
-                        # self.get_reward()
-                        # self.click_ruby_box()
+                        self.get_reward()
+                        self.click_ruby_box()
                         self.Turn_on_stone_box()
                         # self.stone_combine()
                         time.sleep(ran)
                 except Exception as error:
+
                     logging.error(error)
                     with open('error.txt', 'w+') as errorfile:
                         errorfile.write(str(error))
@@ -672,7 +727,7 @@ class UI_controll(Stone_UI):
 
 if __name__ =="__main__":
     UI = UI_controll()
-    print(UI.softmax([8, 14, 314, 727]))
+    UI.main(999,ad_remove=False)
     # UI.check_fast_mining()
 
 
