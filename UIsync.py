@@ -3,6 +3,7 @@ import numpy as np
 import elem
 import time
 import random
+import logging
 #import tempfile as tf
 #from pynput import keyboard
 # todo keyboard listener
@@ -15,10 +16,8 @@ class Stone_UI:
         self.controller = elem.controller(dnpath,emulator_name)
         self.temp = 'temp\\temp.png'
         self.img_refresh()
-        self.screenshot()
         self.img =cv2.imread(self.temp) # img in RGB
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV) #in HSV
-        self.gray = cv2.cvtColor(self.img,cv2.COLOR_RGB2GRAY)
         self.quiz_banner = cv2.imread('pics/quiz_banner.png')
     def screenshot(self):
         con = self.controller
@@ -29,19 +28,35 @@ class Stone_UI:
         self.screenshot()
         self.img =cv2.imread(self.temp) # img in RGB
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV)#in HSV
-        self.gray = cv2.cvtColor(self.img, cv2.COLOR_RGB2GRAY)
 
     def check_game_active(self):
         if self.controller.get_now_activity_windows() == "net.supercat.stone/net.supercat.stone.MainActivity":
             return True
         else:
             return False
+    def softmax(self,w):
 
+        """Calculate the softmax of a list of numbers w.
+
+            Parameters
+            ----------
+            w : list of numbers
+
+            Return
+            ------
+            a list of the same length as w of non-negative numbers
+
+            Examples
+            --------
+"""
+        e = np.exp(np.array(w))
+        dist = e / np.sum(e)
+        return dist
     def check_quiz_pop(self):
-        origin = cv2.cvtColor(self.img[490:553, 225:305],cv2.COLOR_RGB2GRAY)
-        runners = cv2.cvtColor(self.img[362:475, 39:500],cv2.COLOR_RGB2GRAY)
+        origin = cv2.cvtColor(self.img[490:553, 225:305],cv2.COLOR_BGR2GRAY)
+        runners = cv2.cvtColor(self.img[362:475, 39:500],cv2.COLOR_BGR2GRAY)
         ret1, origin = cv2.threshold(origin, 0, 255, cv2.THRESH_BINARY)
-        ret2, runners = cv2.threshold(runners, 70, 255, cv2.THRESH_BINARY)
+        ret2, runners = cv2.threshold(runners, 80, 255, cv2.THRESH_BINARY)
         SURF = cv2.xfeatures2d.SURF_create()
         kp1, des1 = SURF.detectAndCompute(origin, None)
         kp2, des2 = SURF.detectAndCompute(runners, None)
@@ -99,7 +114,6 @@ class Stone_UI:
         img3 = cv2.drawMatchesKnn(origin, kp1, runners, kp2, good, None, **draw_params)
         return img3,vote
 
-
     def check_ruby_box(self):
         """
         checking ruby box on the right side , using the sift to  compare the bottom icon of ruby bot
@@ -132,6 +146,7 @@ class Stone_UI:
             return x,y+400
         else:
             return None
+
     def check_fast_mining(self):
         fast_mining = cv2.imread('pics/fast_mining.png')
         ruby_area = self.img[400:650,0:80]
@@ -225,8 +240,9 @@ class Stone_UI:
         check the auto attack statue , # stone box must be Turn off
         :return: truth , None if the stone box is turned on.
         """
+
         if self.check_stone_box_statue() is False:
-            if self.pic[850,430].item(0) == 19 and self.pic[850,490].item(0) == 19:
+            if self.pic[850,430].item(0) == 18 and self.pic[850,490].item(0) == 18:
                 return True
             else:
                 return False
@@ -261,12 +277,12 @@ class Stone_UI:
         :param stone_table: the table generate from __stone_table
         :return:truth_table of stone
         """
-        blank = cv2.cvtColor(cv2.imread('pics/blank.png'), cv2.COLOR_RGB2GRAY)
+        blank = cv2.cvtColor(cv2.imread('pics/blank.png'), cv2.COLOR_BGR2GRAY)
         truth_table = []
         for x in stone_table:
             temp_list = []
             for pic in x:
-                pic = cv2.cvtColor(pic, cv2.COLOR_RGB2GRAY)
+                pic = cv2.cvtColor(pic, cv2.COLOR_BGR2GRAY)
                 ret, pic = cv2.threshold(pic, 0, 255, cv2.THRESH_BINARY)
                 if np.array_equal(blank, pic):
                     temp_list.append(0)
@@ -286,6 +302,7 @@ class Stone_UI:
         p_x = x * 56 + 56 / 2 + 20
         p_y = y * 56 + 56 / 2 + 680
         return p_x, p_y
+
     def compare_stone(self,stone,stone_table):
         """
 
@@ -330,6 +347,7 @@ class Stone_UI:
                     # cv2.waitKey(0)
                     # cv2.destroyAllWindows()
         return good_index
+
     def check_stone_pairs(self):
         """
 
@@ -356,7 +374,6 @@ class Stone_UI:
                      4: 0}
         count = 0
         while count <= 50:
-            print('run', str(count))
             quiz, vote = self.check_quiz_pop()
             # cv2.imwrite('quiz/{}.png'.format(time.time()), quiz)
             for key in vote.keys():
@@ -366,7 +383,7 @@ class Stone_UI:
             count += 1
         v = list(main_vote.values())
         k = list(main_vote.keys())
-        print(main_vote)
+        logging.info('vote_result = {}'.format(v))
         ans = k[v.index(max(v))]
         value = "{}-{}-{}-{}".format(v[0],v[1],v[2],v[3])
         cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
@@ -374,15 +391,18 @@ class Stone_UI:
 
     def check_rain(self,ad):
         if ad is False:
-            check_poing = self.pic[146,337].item(0)
+            check_poing = self.pic[147,337].item(0)
         else:
             check_poing = self.pic[56,337].item(0)
+
         if check_poing == 0:
-            print('it\'s raining')
+            logging.info('the weather is raining.')
             return True
         else:
             return False
+
 class UI_controll(Stone_UI):
+
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1"):
         super(UI_controll,self).__init__(dnpath,emulator_name)
         self.auto_attack = 0
@@ -391,6 +411,7 @@ class UI_controll(Stone_UI):
         self.START_TIMER = time.time()
         self.main_locker = 0
         self.buster = 0
+
     def get_reward(self):
         if self.check_reward_statue():
             print('get reward')
@@ -406,25 +427,28 @@ class UI_controll(Stone_UI):
             3: [327, 648],
             4: [445, 648]
         }
-        print('save quiz')
-
         v,ans = self.vote_quiz()
         std = np.std(v)
-        print('std = ',std)
-        if std > 40:
+        m = max(v)
+        mean = np.mean(v)
+        logging.info('First solve got std = {},mean = {}'.format(std,mean))
+
+        if std > 20:
+            logging.info('Touch answer {} ,std = {} ,mean = {}'.format(ans,std,mean))
             self.controller.touch(button[ans][0], button[ans][1])
-        elif 40 > std > 20:
-            print('vote not enough \n do multi vote')
+        elif 20> std > 10 :
+            logging.info('Because std is not enough,Doing multi-run.')
             multi_vote = {
+                1:0,
                 2:0,
-                3:0
+                3:0,
+                4:0
             }
             # multi_vote[ans] += 1
             for i in range(0,5):
-                print('multi_run =',i)
+                logging.info('Run = {}'.format(i+1))
                 value,ans = self.vote_quiz()
-                ans = value.index(max(value[1],value[2]))
-                multi_vote[ans+1] += 1
+                multi_vote[ans] += 1
 
             v = list(multi_vote.values())
             k = list(multi_vote.keys())
@@ -435,49 +459,49 @@ class UI_controll(Stone_UI):
         else:
             print('need human detect')
 
-    def close_pop_box(self):
+    def close_pop_box(self,solve_quiz = True):
         self.img_refresh()
-        while self.check_pop_box_statue():
-            if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0) == 19:
+        while self.check_pop_box_statue() and self.check_game_active():
+            if self.pic[638,95].item(0) == 19 and self.pic[638,445].item(0) == 19 and solve_quiz is True:
+                logging.info('There is a Quiz,Solving......')
                 self.quiz_handler()
                 time.sleep(10)
                 self.img_refresh()
 
             else:
-                print('pop')
+                logging.info('There are something pop.')
                 time.sleep(10)
                 self.controller.keyevent("04")
                 time.sleep(1)
                 self.img_refresh()
         if self.check_stone_box_statue() is False:
             self.auto_attack = 0
-        else:
-            self.auto_attack = 1
 
     def Turn_on_auto_attack(self):
         if self.auto_attack == 0:
-            print('Turn on auto attack')
             self.img_refresh()
             time.sleep(1)
             if self.check_stone_box_statue():
-                print('Turn off stone box')
+                logging.info('checking Auto attack statue')
                 self.controller.touch(495, 710)
             time.sleep(1)
             self.img_refresh()
             time.sleep(1)
             if not self.check_auto_attack_statue():
-                print('Turn on')
-                self.controller.touch(460, 840)
-                time.sleep(1)
+                logging.info('Touch Auto attack button.')
+                while not self.check_auto_attack_statue():
+                    self.controller.touch(460, 840)
+                    time.sleep(1)
+                    self.img_refresh()
                 self.auto_attack = 1
             else:
+                logging.info('Auto attack seems was ON.')
                 self.auto_attack = 1
-
 
     def Turn_on_stone_box(self):
         self.img_refresh()
         if not self.check_stone_box_statue():
-            print('turn on stone box')
+            logging.info('Keep stone box ON.')
             self.controller.touch(495,920)
         time.sleep(1)
 
@@ -486,9 +510,10 @@ class UI_controll(Stone_UI):
         pairs = self.check_stone_pairs()
 
         if len(pairs) > 0:
-            print('stone combine')
             temp_list = []
+            loggingstring = 'combining.'
             for pair in pairs:
+                logging.info(loggingstring)
                 for index, value in enumerate(pair[::-1]):
                     if value not in temp_list and pair[::-1][index - 1] not in temp_list:
                         x1, y1 = value
@@ -496,7 +521,7 @@ class UI_controll(Stone_UI):
                         self.controller.swipe(x1, y1, x2, y2, 200)
                         temp_list.append((x1, y1))
                         temp_list.append((x2, y2))
-
+                loggingstring += "."
 
     def Clan_exp_up(self):
         if self.clan_exp - time.time() > 10800 or self.clan_exp == 0:
@@ -536,10 +561,11 @@ class UI_controll(Stone_UI):
                 try:
                     self.img_refresh()
                     if self.check_mining_or_mob() == 'mining':
-                        if self.check_rain(ad_remove) is True:
+                        logging.info('bot is doing mining thread.')
+                        if self.check_rain(ad_remove) is True and fast_mining_time is False:
                             self.buster = 1
                             if time.time() - fast_mining_time > 180:
-                                print("click_fast_mining")
+                                logging.info('bot try to click fasting mining.')
                                 self.click_fast_mining_one()
                                 fast_mining_time = time.time()
                         else:
@@ -548,67 +574,76 @@ class UI_controll(Stone_UI):
                             ran = random.randint(2, 15)
                         else:
                             ran = 2
+                        logging.info('sleeping {} sec this run.'.format(ran))
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
-                        self.get_reward()
-                        self.click_ruby_box()
+                        # self.get_reward()
+                        # self.click_ruby_box()
                         self.Turn_on_stone_box()
                         self.stone_combine()
                         time.sleep(ran)
                     else:
                         ran = random.randint(2, 15)
-                        self.buster = 0
+                        logging.info('sleeping {} sec this run.'.format(ran))
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
-                        self.get_reward()
-                        self.click_ruby_box()
+                        # self.get_reward()
+                        # self.click_ruby_box()
                         self.Turn_on_stone_box()
                         # self.stone_combine()
                         time.sleep(ran)
                 except Exception as error:
-                    print(error)
+                    logging.error(error)
                     with open('error.txt', 'w+') as errorfile:
                         errorfile.write(str(error))
                     time.sleep(5)
             else:
+                loggingstring = 'Open Game.'
                 while self.check_game_active() is False:
+                    logging.info(loggingstring)
                     self.controller.launch_app('net.supercat.stone')
+                    time.sleep(5)
+                    loggingstring += "."
             self.REBOOT(reboot_timer)
 
     def public_main(self,reboot_timer,ad_remove = True):
         fast_mining_time = 0
+        logging.info('config AD banner is {}'.format(ad_remove))
         while 1:
             if self.check_game_active() is True:
                 try:
-                    if self.buster == 0:
-                        ran = random.randint(2, 30)
-                    else:
-                        ran = 2
                     self.img_refresh()
-
                     if self.check_rain(ad_remove) is True:
                         self.buster = 1
                         if time.time() - fast_mining_time > 180:
-                            print("click_fast_mining")
+                            logging.info('bot try to click fasting mining.')
                             self.click_fast_mining_one()
                             fast_mining_time = time.time()
                     else:
                         self.buster = 0
+                    if self.buster == 0:
+                        ran = random.randint(2, 15)
+                    else:
+                        ran = 2
+                    logging.info('sleeping {} sec this run.'.format(ran))
                     self.close_pop_box()
                     self.Turn_on_auto_attack()
                     self.Turn_on_stone_box()
                     self.stone_combine()
                     time.sleep(ran)
                 except Exception as error:
-                    print(error)
+                    logging.error(error)
                     with open('error.txt', 'w+') as errorfile:
                         errorfile.write(str(error))
                     time.sleep(5)
             else:
+                loggingstring = 'Open Game.'
                 while self.check_game_active() is False:
+                    logging.info(loggingstring)
                     self.controller.launch_app('net.supercat.stone')
+                    loggingstring += "."
             self.REBOOT(reboot_timer)
 
     def REBOOT(self,reboot_time):
@@ -618,10 +653,15 @@ class UI_controll(Stone_UI):
         :return:
         """
         if time.time() - self.START_TIMER > int(reboot_time)*60*60:
+            logging.info('Because Reboot timer is out, Rebooting...')
             self.controller.reboot()
+            logging.info('Sleeping 60 sec.....')
             time.sleep(60)
+            loggingstring = 'Open Game.'
             while self.check_game_active() is False:
+                logging.info(loggingstring)
                 self.controller.launch_app('net.supercat.stone')
+                loggingstring+="."
             self.START_TIMER = time.time()
 
 
@@ -632,7 +672,7 @@ class UI_controll(Stone_UI):
 
 if __name__ =="__main__":
     UI = UI_controll()
-    UI.main(999)
+    print(UI.softmax([8, 14, 314, 727]))
     # UI.check_fast_mining()
 
 

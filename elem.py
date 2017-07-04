@@ -90,11 +90,11 @@ class controller(Element):
         self.dn.adb("name", self.device, 'pull {} {}'.format(target_file, file_name))
 
     def swipe(self,x1,y1,x2,y2,duration):
-        self.dn.adb('name', self.device, 'wait-for-device')
+        # self.dn.adb('name', self.device, 'wait-for-device')
         self.dn.adb("name",self.device,'shell input swipe {} {} {} {} {}'.format(x1,y1,x2,y2,duration))
 
     def keyevent(self,key):
-        self.dn.adb('name',self.device, 'wait-for-device')
+        # self.dn.adb('name',self.device, 'wait-for-device')
         self.dn.adb("name",self.device,'shell input keyevent {}'.format(key))
 
     def get_now_activity_windows(self):
