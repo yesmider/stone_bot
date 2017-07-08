@@ -1,1 +1,0 @@
-C:\projects\opencv-python\opencv\modules\imgproc\src\color.cpp:9815: error: (-215) (scn == 3 || scn == 4) && (depth == CV_8U || depth == CV_32F) in function cv::cvtColor

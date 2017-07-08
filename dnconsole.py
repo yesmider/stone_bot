@@ -1,18 +1,20 @@
-import subprocess
-import time
+import get_console_opt
+import os
 import logging
-
+# logging.basicConfig(format='%(asctime)s %(funcName)s %(message)s',level='DEBUG')
 class dn:
     def __init__(self,path):
-        self.root = path+"dnconsole.exe "
+        self.root = os.path.join(path,"dnconsole.exe")+' '
+        if not os.path.isfile(self.root):
+            raise LookupError('dnconsole not found. change your emulator path')
     def quit(self,method,n):
 
         command = self.root+"quit "+"--"+method+" "+str(n)
         if method == "name" or method == "index":
             logging.debug('quitting emulator {} by {}'.format(n, method))
-            ret = subprocess.check_output(command)
-            if ret != b"":
-                raise Exception(str(ret))
+            opt,err = get_console_opt.get_console_output(command)
+            if err != "":
+                raise Exception(str(err))
         else:
              raise Exception("method not support")
 
@@ -20,8 +22,8 @@ class dn:
     def quitall(self):
         command = self.root+"quitall "
         logging.debug('quitting all emulators')
-        opt = subprocess.check_output(command)
-        if opt != b'':
+        opt,err = get_console_opt.get_console_output(command)
+        if opt != '':
             raise Exception(opt)
         else:
              raise Exception("method not support")
@@ -29,8 +31,8 @@ class dn:
         command = self.root +"launch "+"--"+method+" "+str(n)
         if method =="name" or method == "index":
             logging.debug('launch emulator {} by {}'.format(n, method))
-            opt = subprocess.check_output(command)
-            if opt != b"":
+            opt,err = get_console_opt.get_console_output(command)
+            if opt != "":
                 raise Exception(opt)
         else:
              raise Exception("method not support")
@@ -39,8 +41,8 @@ class dn:
         command = self.root + "reboot "+"--"+method+" "+str(n)
         if method == "name" or method == "index":
             logging.debug('reboot all emulators')
-            opt = subprocess.check_output(command)
-            if opt != b"":
+            opt,err = get_console_opt.get_console_output(command)
+            if opt != "":
                 raise Exception(opt)
         else:
              raise Exception("method not support")
@@ -48,8 +50,8 @@ class dn:
         command = self.root + "runapp "+"--"+method+" "+str(n)+" --packagename "+apk_name
         if method == "index" or method == "name":
             logging.debug('runapp {} on emulator {} by {} method'.format(apk_name,n, method))
-            opt = subprocess.check_output(command)
-            if opt != b"":
+            opt,err = get_console_opt.get_console_output(command)
+            if opt != "":
                 raise Exception(opt)
         else:
             raise Exception("method not support")
@@ -58,11 +60,11 @@ class dn:
         #print(cmd)
         if method == "index" or method == "name":
             logging.debug('emulator {} by method {} - {}'.format(n,method,cmd))
-            try:
-                opt = subprocess.check_output(command)
-            except subprocess.CalledProcessError as exc:
-                opt = exc.stdout
-            if print_call_back == 1:
+            opt,err = get_console_opt.get_console_output(command)
+            # print('opt',opt,err)
+            opt = opt.replace('\n', "")
+            opt = opt.replace('\r', '')
+            if print_call_back == 1 and opt != '':
                 logging.debug('call back : {}'.format(opt))
             return opt
         else:
@@ -71,12 +73,13 @@ class dn:
     def isrunning(self,method,n):
         command = self.root +"isrunning "+ "--"+method+" "+ str(n)
         if method == "index" or method == "name":
-            opt = subprocess.check_output(command)
+            opt,err = get_console_opt.get_console_output(command)
+
             logging.debug('checking emulator {} running statue'.format(n))
-            if opt == b'running':
+            if opt == 'running':
                 logging.debug('emulator {} is running'.format(n))
                 return True
-            elif opt == b'stop':
+            elif opt == 'stop':
                 logging.debug('emulator {} is not running.'.format(n))
                 return False
         else:
@@ -85,12 +88,12 @@ class dn:
     def killapp(self,method,n,apk_name):
         command = self.root +"killapp "+"--"+method+" "+str(n)+" --packagename "+apk_name
         if method == 'index' or method == 'name':
-            opt = subprocess.check_output(command)
+            opt = get_console_opt.get_console_output(command)
             logging.debug('killapp {} on emulator {} by {} method'.format(apk_name, n, method))
-            if opt != b"":
+            if opt != "":
                 raise Exception(opt)
             else:
-                raise Exception("method not support")
+                raise Exception("kill app done.")
     # def list:
     #
     # def runninglist:
@@ -129,3 +132,4 @@ class dn:
 if __name__ == "__main__":
     root = "C:\ChangZhi2\dnplayer2\\"
     dd = dn(root)
+    dd.isrunning('name',1)

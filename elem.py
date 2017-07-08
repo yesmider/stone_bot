@@ -11,9 +11,6 @@ class Element:
         self.dn = dnconsole.dn(path)
         self.filedir = tempfile.gettempdir()+"\\uidump.xml"
         self.pattern = re.compile(r"\d+")
-        while self.dn.isrunning("name", self.device) != 1:
-            self.dn.launch('name',name)
-            time.sleep(5)
     def __uidump(self):
         #self.dn.adb("name",self.device,"wait-for-device ")
         self.dn.adb("name",self.device,"shell uiautomator dump /data/local/tmp/uidump.xml")
@@ -78,12 +75,12 @@ class controller(Element):
         super(controller,self).__init__(path,name)
 
     def screenshot(self,filepath = '/sdcard/temp.png'):
-        self.dn.adb('name', self.device, 'wait-for-device')
+        # self.dn.adb('name', self.device, 'wait-for-device')
         self.dn.adb("name",self.device,"shell screencap -p {}".format(filepath))
 
 
     def pull(self,targetfile,filename):
-        self.dn.adb('name', self.device, 'wait-for-device')
+        # self.dn.adb('name', self.device, 'wait-for-device')
         self.dn.adb("name",self.device,'pull {} {}'.format(targetfile,filename))
 
     def pull_screenshot(self,target_file = '/sdcard/temp.png',file_name = 'temp.png'):

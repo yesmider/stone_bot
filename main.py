@@ -5,7 +5,7 @@ import logging
 config = configparser.ConfigParser()
 # config file decoding
 # todo check img shape
-logging.basicConfig(format='%(asctime)s %(funcName)s %(message)s',level='INFO')
+logging.basicConfig(format='%(asctime)s %(funcName)s %(message)s',level='DEBUG')
 try:
     config.read('config.ini')
 except UnicodeDecodeError:
@@ -25,12 +25,13 @@ if path[-1] is not "\\":
 
 # main thread
 MODE = 1
+# UI = UIsync.UI_controll(path,name)
+# UI.main(reboot_timer,ad_remove)
 try:
     UI = UIsync.UI_controll(path,name)
     if MODE == 1:
         UI.main(reboot_timer,ad_remove)
-    else:
-        UI.public_main(reboot_timer,ad_remove)
+
 except Exception as exc:
     print(exc)
     os.system('pause')
