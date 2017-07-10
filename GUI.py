@@ -34,6 +34,10 @@ class UI(QWidget,Ui_Stone):
             self.restart_timer.setValue(self.config_reboot_timer)
             self.DEBUG.setChecked(self.config_DEBUG)
             self.always_fast_mining_checker.setChecked(self.config_fast_mining)
+            self.max_sleep_box.setValue(self.config_max_sleep_time)
+            self.max_sleep_box.setMinimum(self.config_min_sleep_time)
+            self.min_sleep_box.setValue(self.config_min_sleep_time)
+            self.min_sleep_box.setMaximum(self.config_max_sleep_time)
             #init python log handler
             self.loghandler = QtHandler()
             self.loghandler.setFormatter(logging.Formatter('%(asctime)s %(funcName)s %(message)s'))
@@ -59,6 +63,8 @@ class UI(QWidget,Ui_Stone):
             self.always_fast_mining_checker.clicked.connect(self.fast_mining_handler)
             #
             self.restart_timer.valueChanged.connect(self.restart_handler)
+            self.max_sleep_box.valueChanged.connect(self.max_sleep_handler)
+            self.min_sleep_box.valueChanged.connect(self.min_sleep_handler)
             #
             self.dir_string.textChanged.connect(self.dir_string_handler)
             self.dir.clicked.connect(self.push_dir)
@@ -81,6 +87,8 @@ class UI(QWidget,Ui_Stone):
             self.config_ad_remove = self.config.getboolean('config', 'ad_remove')
             self.config_DEBUG = self.config.getboolean('config','DEBUG')
             self.config_fast_mining = self.config.getboolean('config','always_fast_mining')
+            self.config_max_sleep_time = int(self.config['config']['max_sleep'])
+            self.config_min_sleep_time = int(self.config['config']['min_sleep'])
             # if self.config_path[-1] is not "\\":
             #     self.config_path += "\\"
             #     self.config['config']['emulator_path'] = self.config_path
@@ -95,6 +103,8 @@ class UI(QWidget,Ui_Stone):
             self.emu_name.setEnabled(True)
             self.dir.setEnabled(True)
             self.always_fast_mining_checker.setEnabled(True)
+            self.max_sleep_box.setEnabled(True)
+            self.min_sleep_box.setEnabled(True)
         def disable_setting_group(self):
             self.startbutton.setEnabled(False)
             self.ad_remove_checker.setEnabled(False)
@@ -103,6 +113,8 @@ class UI(QWidget,Ui_Stone):
             self.emu_name.setEnabled(False)
             self.dir.setEnabled(False)
             self.always_fast_mining_checker.setEnabled(False)
+            self.max_sleep_box.setEnabled(False)
+            self.min_sleep_box.setEnabled(False)
         @QtCore.pyqtSlot()
         def push_start(self):
             self.logtext.appendPlainText('------------START------------')
@@ -136,7 +148,8 @@ class UI(QWidget,Ui_Stone):
         def main(self):
             try:
                 self.bot = UI_controll(self.config_path,self.config_name,ad=self.config_ad_remove)
-                self.bot.main(self.config_reboot_timer,always_fast_mining=self.config_fast_mining)
+                self.bot.main(self.config_reboot_timer,always_fast_mining=self.config_fast_mining,
+                              ran_max=self.config_max_sleep_time,ran_min=self.config_min_sleep_time)
 
             except Exception as exc:
                 logging.warning(exc)
@@ -186,6 +199,19 @@ class UI(QWidget,Ui_Stone):
             else:
                 self.config['config']['always_fast_mining'] = 'False'
             self.config_fast_mining = self.config.getboolean('config','always_fast_mining')
+
+        @QtCore.pyqtSlot(int)
+        def max_sleep_handler(self,value):
+            self.config['config']['max_sleep'] = str(value)
+            self.config_max_sleep_time = int(self.config['config']['max_sleep'])
+            self.min_sleep_box.setMaximum(self.config_max_sleep_time)
+
+        @QtCore.pyqtSlot(int)
+        def min_sleep_handler(self,value):
+            self.config['config']['min_sleep'] = str(value)
+            self.config_min_sleep_time = int(self.config['config']['min_sleep'])
+            self.max_sleep_box.setMinimum(self.config_min_sleep_time)
+
         def closeEvent(self, QCloseEvent):
             self.save()
 

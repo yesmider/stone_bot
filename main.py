@@ -1,5 +1,5 @@
 import configparser
-import UIsync
+import UIcontrol
 import os
 import logging
 config = configparser.ConfigParser()
@@ -25,13 +25,13 @@ if path[-1] is not "\\":
 
 # main thread
 MODE = 1
-# UI = UIsync.UI_controll(path,name)
-# UI.main(reboot_timer,ad_remove)
-try:
-    UI = UIsync.UI_controll(path,name)
-    if MODE == 1:
-        UI.main(reboot_timer,ad_remove)
-
-except Exception as exc:
-    print(exc)
-    os.system('pause')
+UI = UIcontrol.UI_controll(path,name)
+UI.main(reboot_timer,ad_remove)
+# # try:
+#     UI = UIcontrol.UI_controll(path,name)
+#     if MODE == 1:
+#         UI.main(reboot_timer,ad_remove)
+#
+# # except Exception as exc:
+# #     print(exc)
+# #     os.system('pause')

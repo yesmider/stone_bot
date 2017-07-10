@@ -112,6 +112,7 @@ class UI_controll(Stone_UI):
                 self.auto_attack = 1
 
     def Turn_on_stone_box(self):
+        logging.info('check stone box.')
         self.img_refresh()
         if not self.check_stone_box_statue():
             logging.info('Keep stone box ON.')
@@ -153,6 +154,7 @@ class UI_controll(Stone_UI):
                     self.controller.keyevent("04")
 
     def click_ruby_box(self):
+        self.img_refresh()
         xy = self.check_ruby_box()
         if xy:
             x,y = xy
@@ -165,9 +167,31 @@ class UI_controll(Stone_UI):
             x,y = xy
             self.controller.touch(x,y)
             time.sleep(1)
-            self.controller.touch(200,565)
+            self.img_refresh()
+            if self.check_Alert_box():
+                self.controller.touch(200,565)
+                return True
+            else:
+                return False
+    def click_bonus_ruby(self):
+        self.img_refresh()
+        xy = self.check_bonus_ruby()
+        if xy:
+            x, y = xy
+            self.controller.touch(x, y)
+            time.sleep(1)
+            self.controller.touch(200, 565)
+            if self.pic[638, 95].item(0) == 19 and self.pic[638, 445].item(0) == 19:
+                self.img_refresh()
+                self.quiz_handler()
+                self.img_refresh()
+            if self.ad is False:
+                time.sleep(40)
+                self.controller.keyevent("04")
+                time.sleep(1)
 
-    def main(self,reboot_timer,always_fast_mining = False):
+
+    def main(self,reboot_timer,always_fast_mining = False,ran_min = 2,ran_max = 15):
         fast_mining_time = 0
         logging.info('bot start with setting - always_fast_mining = {} , ad_remove = {}'.format(str(always_fast_mining), str(self.ad)))
 
@@ -182,27 +206,29 @@ class UI_controll(Stone_UI):
                             self.buster = 1
                             if time.time() - fast_mining_time > 180:
                                 logging.info('bot try to click fasting mining.')
-                                self.click_fast_mining_one()
-                                fast_mining_time = time.time()
+                                if self.click_fast_mining_one():
+                                    fast_mining_time = time.time()
                         else:
                             self.buster = 0
                         if self.buster == 0:
-                            ran = random.randint(2, 15)
+                            ran = random.randint(ran_min, ran_max)
                         else:
                             if always_fast_mining is True:
-                                ran = random.randint(2,5)
+                                ran = random.randint(ran_min,ran_max)
                             else:
-                                ran = 2
+                                ran = 1
                         logging.info('sleeping {} sec this run.'.format(ran))
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
                         # self.Clan_exp_up()
                         self.get_reward()
                         self.click_ruby_box()
+                        # self.click_bonus_ruby()
                         self.Turn_on_stone_box()
                         self.stone_combine()
                         time.sleep(ran)
                     else:
+                        logging.info('bot is doing mob thread.')
                         ran = random.randint(2, 15)
                         logging.info('sleeping {} sec this run.'.format(ran))
                         self.close_pop_box()
@@ -210,6 +236,7 @@ class UI_controll(Stone_UI):
                         # self.Clan_exp_up()
                         self.get_reward()
                         self.click_ruby_box()
+                        # self.click_bonus_ruby()
                         self.Turn_on_stone_box()
                         # self.stone_combine()
                         time.sleep(ran)
