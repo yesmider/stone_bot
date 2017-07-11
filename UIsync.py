@@ -22,11 +22,16 @@ class Stone_UI:
         self.KAZE = cv2.KAZE_create()
         self.BF = cv2.BFMatcher()
         self.train_path = 'color_train'
-        self.pic_dict = {
+        self.pics_path = 'pics'
+        self.quiz_pics = {
+        }
+        self.pics = {
+
         }
         self.train_init()
     def train_init(self):
         train = [f for f in os.listdir(self.train_path) if os.path.isdir(os.path.join(self.train_path, f)) and f != 'compare']
+        pics = [f for f in os.listdir(self.pics_path) if os.path.isfile(os.path.join(self.pics_path,f))]
         for dir in train:
             l = []
             full_path = os.path.join(self.train_path, dir)
@@ -39,7 +44,12 @@ class Stone_UI:
                 # ret1, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY)
                 kp, des = self.KAZE.detectAndCompute(img, None)
                 l.append((img, kp, des))
-            self.pic_dict[dir] = l
+            self.quiz_pics[dir] = l
+        for pic_name in pics:
+            logging.info('loading file - {}'.format(pic_name))
+            full_path = os.path.join(self.pics_path,pic_name)
+            img = cv2.imread(full_path)
+            self.pics[pic_name] = img
         logging.info('train_data_init done.')
     def screenshot(self):
         con = self.controller
@@ -69,8 +79,7 @@ class Stone_UI:
             dist = e / np.sum(e)
             return dist
     def check_Alert_box(self):
-        alert = cv2.imread('pics/alert.png')
-        cv2.imwrite('alert.png',alert)
+        alert = self.pics['alert.png']
         box = self.img[370: 390, 250: 290]
 
         if np.equal(alert.all(),box.all()):
@@ -79,7 +88,7 @@ class Stone_UI:
             return False
     def check_bonus_ruby(self):
         ruby_area = self.img[400:650, 0:80]
-        bonus_ruby = cv2.imread('pics/bonus_ruby.png')
+        bonus_ruby = self.pics['bonus_ruby.png']
         kp1,des1 = self.KAZE.detectAndCompute(bonus_ruby,None)
         kp2,des2 = self.KAZE.detectAndCompute(ruby_area,None)
         if kp2:
@@ -133,7 +142,7 @@ class Stone_UI:
             '5': 0,
             '6': 0
         }
-        for key,value in self.pic_dict.items():
+        for key,value in self.quiz_pics.items():
             for img,kp,des in value:
                 matches = self.BF.knnMatch(des1,des,k=2)
                 good = []
@@ -152,7 +161,7 @@ class Stone_UI:
             3: 0,
             4: 0
         }
-        for img,kp,des in self.pic_dict[ans]:
+        for img,kp,des in self.quiz_pics[ans]:
             matches = self.BF.knnMatch(des,des2,k=2)
             good = []
             for m, n in matches:
@@ -193,7 +202,7 @@ class Stone_UI:
         checking ruby box on the right side , using the sift to  compare the bottom icon of ruby bot
         :return:  the axis of ruby box touch point
         """
-        ruby_box = cv2.imread('pics/box.png')
+        ruby_box = self.pics['box.png']
         ruby_area = self.img[400:650,0:80]
         sift = cv2.xfeatures2d.SIFT_create()
         kp1, des1 = sift.detectAndCompute(ruby_box, None)
@@ -223,7 +232,7 @@ class Stone_UI:
                 return None
 
     def check_fast_mining(self):
-        fast_mining = cv2.imread('pics/fast_mining.png')
+        fast_mining = self.pics['fast_mining.png']
         ruby_area = self.img[400:650,0:80]
         sift = cv2.xfeatures2d.SIFT_create()
         kp1, des1 = sift.detectAndCompute(fast_mining, None)
@@ -256,11 +265,7 @@ class Stone_UI:
         check player is in mining fields or mod fields
         :return: string : mob or mining
         """
-        mining = cv2.imread('pics/mining.png')
-        if mining is None:
-            while mining is not None:
-                self.img_refresh()
-                mining = cv2.imread('pics/mining.png')
+        mining = self.pics['mining.png']
         if self.ad is True:
             check_point = self.img[106:108,344:346]
         else:
@@ -274,7 +279,7 @@ class Stone_UI:
         check the clan title in the clan tabs
         :return: truth
         """
-        clan = cv2.imread('pics/clan.png')
+        clan = self.pics['clan.png']
         if np.array_equal(self.img[122:137,254:286],clan):
             return True
         else:
@@ -362,7 +367,7 @@ class Stone_UI:
         :param stone_table: the table generate from __stone_table
         :return:truth_table of stone
         """
-        blank = cv2.cvtColor(cv2.imread('pics/blank.png'), cv2.COLOR_BGR2GRAY)
+        blank = cv2.cvtColor(self.pics['blank.png'], cv2.COLOR_BGR2GRAY)
         truth_table = []
         for x in stone_table:
             temp_list = []
@@ -407,10 +412,12 @@ class Stone_UI:
                 kp2, des2 = self.KAZE.detectAndCompute(pic, None)
                 matches = self.BF.knnMatch(des1, des2, k=2)
                 good = []
+
                 for m, n in matches:
                     if m.distance < 0.7 * n.distance:
                         good.append(m)
                 homography = []
+
                 if len(good) >=10:
                     src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
                     dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
@@ -419,8 +426,9 @@ class Stone_UI:
                     for index,pts in enumerate(good):
                         if maskmatches[index] == 1:
                             homography.append(pts)
-                if len(homography) >=10:
-                    good_index.append(self.x_y_to_pixel(x,y))
+                if len(homography) >= 0.5 * len(kp1):
+                    # print(x,y)
+                    good_index.append((x,y))
 
                     # draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
                     #                    singlePointColor=None,
@@ -444,15 +452,27 @@ class Stone_UI:
         # get pairs
         if self.check_stone_box_statue() is True:
             t = time.time()
+            count = 0
+            checked = []
             for y in range(len(truth_table)):
                 for x in range(len(truth_table[y])):
-                    if truth_table[y][x] == 1:
+                    if truth_table[y][x] == 1 and (x,y) not in checked:
                         main_stone = stone_table[y][x]
                         pair = self.compare_stone(main_stone,stone_table)
+                        count += 1
+                        n_pair = []
+                        for xy in pair:
+                            x,y = xy
+                            n_pair.append(self.x_y_to_pixel(x,y))
+
+                            if xy not in checked:
+                                checked.append(xy)
+                        # print(checked)
+
                         if len(pair)>1 and pair not in pairs:
-                            pairs.append(pair)
+                            pairs.append(n_pair)
             t1 = time.time()
-            logging.info('Spend {} sec for compute stone pair'.format(t1-t))
+            logging.info('Spend {} sec for compute stone {} pair'.format(t1-t,count))
         return pairs
 
     def vote_quiz(self):
@@ -497,8 +517,5 @@ class Stone_UI:
 
 if __name__ =="__main__":
     UI = Stone_UI()
-    while 1 :
-        UI.img_refresh()
-        print(UI.check_Alert_box())
 
 

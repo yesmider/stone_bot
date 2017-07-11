@@ -14,7 +14,7 @@ class UI_controll(Stone_UI):
         self.START_TIMER = time.time()
         self.main_locker = 0
         self.buster = 0
-
+        self.bouns_ruby_time = 0
     def get_reward(self):
         if self.check_reward_statue():
             logging.info('get reward.')
@@ -176,19 +176,29 @@ class UI_controll(Stone_UI):
     def click_bonus_ruby(self):
         self.img_refresh()
         xy = self.check_bonus_ruby()
-        if xy:
+        if xy and time.time() - self.bouns_ruby_time > 3600:
             x, y = xy
             self.controller.touch(x, y)
             time.sleep(1)
             self.controller.touch(200, 565)
+            time.sleep(2)
+            self.img_refresh()
             if self.pic[638, 95].item(0) == 19 and self.pic[638, 445].item(0) == 19:
-                self.img_refresh()
+                logging.info('quiz pop..')
                 self.quiz_handler()
                 self.img_refresh()
-            if self.ad is False:
-                time.sleep(40)
-                self.controller.keyevent("04")
                 time.sleep(1)
+            if self.ad is False:
+                # print(self.check_Alert_box())
+                if self.check_Alert_box():
+                    logging.info('ad seems stock out, check after 1hr.')
+                    self.bouns_ruby_time = time.time()
+                else:
+                    logging.info('watching...ads. sleep for 40 sec.')
+                    time.sleep(40)
+                    logging.info('send return EVENT.')
+                    self.controller.keyevent("04")
+                    time.sleep(1)
 
 
     def main(self,reboot_timer,always_fast_mining = False,ran_min = 2,ran_max = 15):
@@ -223,7 +233,7 @@ class UI_controll(Stone_UI):
                         # self.Clan_exp_up()
                         self.get_reward()
                         self.click_ruby_box()
-                        # self.click_bonus_ruby()
+                        self.click_bonus_ruby()
                         self.Turn_on_stone_box()
                         self.stone_combine()
                         time.sleep(ran)
@@ -236,7 +246,7 @@ class UI_controll(Stone_UI):
                         # self.Clan_exp_up()
                         self.get_reward()
                         self.click_ruby_box()
-                        # self.click_bonus_ruby()
+                        self.click_bonus_ruby()
                         self.Turn_on_stone_box()
                         # self.stone_combine()
                         time.sleep(ran)
