@@ -7,7 +7,9 @@ numpy 1.11
 pyqt 5.9
 
 all function base on dnconsole -- ldmnq emulator
+
 change advance setting to 540*960 240dpi
+
 select ingame key setting to middle
 
 ---------------------
