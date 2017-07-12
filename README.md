@@ -13,3 +13,5 @@ change advance setting to 540*960 240dpi
 select ingame key setting to middle
 
 ---------------------
+
+thank enki for get_console_output.py,use for solve building issue in pyinstaller.
