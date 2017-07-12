@@ -147,7 +147,7 @@ class UI(QWidget,Ui_Stone):
         @QtCore.pyqtSlot()
         def main(self):
             try:
-                self.bot = UI_controll(self.config_path,self.config_name,ad=self.config_ad_remove)
+                self.bot = UI_controll(self.config_path,self.config_name,ad=self.config_ad_remove,adb_mode=self.adb_test_checkBox.isTristate())
                 self.bot.main(self.config_reboot_timer,always_fast_mining=self.config_fast_mining,
                               ran_max=self.config_max_sleep_time,ran_min=self.config_min_sleep_time)
 

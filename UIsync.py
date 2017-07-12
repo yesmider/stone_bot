@@ -4,7 +4,7 @@ import elem
 import logging
 import os
 import time
-#import tempfile as tf
+import screencap
 #from pynput import keyboard
 # todo keyboard listener
 # todo autodetect and donate coin to clan
@@ -13,10 +13,11 @@ class Stone_UI:
     """
     this class is for UI detection
     """
-    def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\', emulator_name="1", ad=False):
+    def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\', emulator_name="1", ad=False,adb_mode = False):
         self.controller = elem.controller(dnpath,emulator_name)
         self.temp = 'temp\\temp.png'
         self.ad = ad
+        self.adb_mode = adb_mode
         self.img_refresh()
         self.quiz_banner = cv2.imread('pics/quiz_banner.png')
         self.KAZE = cv2.KAZE_create()
@@ -52,13 +53,17 @@ class Stone_UI:
             self.pics[pic_name] = img
         logging.info('train_data_init done.')
     def screenshot(self):
-        con = self.controller
-        con.screenshot(filepath='/sdcard/Misc/temp.png')
-        con.pull_screenshot(target_file='/sdcard/Misc/temp.png',file_name=self.temp)
+        if self.adb_mode is False:
+            con = self.controller
+            con.screenshot(filepath='/sdcard/Misc/temp.png')
+            con.pull_screenshot(target_file='/sdcard/Misc/temp.png', file_name=self.temp)
+        else:
+            self.img = screencap.adb_screen_cap()
 
     def img_refresh(self):
         self.screenshot()
-        self.img =cv2.imread(self.temp) # img in RGB
+        if self.adb_mode is False:
+            self.img =cv2.imread(self.temp) # img in RGB
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV)#in HSV
 
     def softmax(self, w):
@@ -417,8 +422,8 @@ class Stone_UI:
                     if m.distance < 0.7 * n.distance:
                         good.append(m)
                 homography = []
-
-                if len(good) >=10:
+                # print(len(kp1),len(good))
+                if len(good) > 0.2 * len(kp1):
                     src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
                     dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
                     M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
@@ -426,19 +431,19 @@ class Stone_UI:
                     for index,pts in enumerate(good):
                         if maskmatches[index] == 1:
                             homography.append(pts)
-                if len(homography) >= 0.5 * len(kp1):
+                if len(homography) > 0.7 * len(good) :
                     # print(x,y)
                     good_index.append((x,y))
 
-                    # draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
-                    #                    singlePointColor=None,
-                    #                    matchesMask=None,  # draw only inliers
-                    #                    flags=2)
-                    #
-                    # img3 = cv2.drawMatches(stone, kp1, pic, kp2, homography, None, **draw_params)
-                    # cv2.imshow('image', img3)
-                    # cv2.waitKey(0)
-                    # cv2.destroyAllWindows()
+        #             draw_params = dict(matchColor=(0, 255, 0),  # draw matches in green color
+        #                                singlePointColor=None,
+        #                                matchesMask=None,  # draw only inliers
+        #                                flags=2)
+        #
+        #             img3 = cv2.drawMatches(stone, kp1, pic, kp2, homography, None, **draw_params)
+        #             cv2.imshow('image', img3)
+        #             cv2.waitKey(0)
+        #             cv2.destroyAllWindows()
         return good_index
 
     def check_stone_pairs(self):

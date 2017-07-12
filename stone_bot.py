@@ -90,6 +90,9 @@ class Ui_Stone(object):
         self.random_sleep_label = QtWidgets.QLabel(self.setting)
         self.random_sleep_label.setGeometry(QtCore.QRect(280, 50, 47, 12))
         self.random_sleep_label.setObjectName("random_sleep_label")
+        self.adb_test_checkBox = QtWidgets.QCheckBox(self.setting)
+        self.adb_test_checkBox.setGeometry(QtCore.QRect(110, 430, 91, 16))
+        self.adb_test_checkBox.setObjectName("adb_test_checkBox")
         self.tab_widget.addTab(self.setting, "")
         self.restart_label.setBuddy(self.restart_timer)
 
@@ -122,5 +125,6 @@ class Ui_Stone(object):
         self.min_label.setText(_translate("Stone", "下限"))
         self.max_label.setText(_translate("Stone", "上限"))
         self.random_sleep_label.setText(_translate("Stone", "隨機休息時間"))
+        self.adb_test_checkBox.setText(_translate("Stone", "adb test mode"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.setting), _translate("Stone", "設定"))
 

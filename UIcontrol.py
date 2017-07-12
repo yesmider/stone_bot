@@ -6,8 +6,8 @@ import numpy as np
 
 class UI_controll(Stone_UI):
 
-    def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1",ad=False):
-        super(UI_controll,self).__init__(dnpath,emulator_name,ad=ad)
+    def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1",ad=False,adb_mode=False):
+        super(UI_controll,self).__init__(dnpath,emulator_name,ad=ad,adb_mode=adb_mode)
         self.auto_attack = 0
         self.toggle = False
         self.clan_exp = 0
@@ -128,10 +128,13 @@ class UI_controll(Stone_UI):
             loggingstring = 'combining.'
             for pair in pairs:
                 logging.info(loggingstring)
-                for index, value in enumerate(pair[::-1]):
-                    if value not in temp_list and pair[::-1][index - 1] not in temp_list:
+                pair.sort(key=lambda k:k[1] , reverse=True)
+                # print(pair)
+                for index, value in enumerate(pair):
+                    if value not in temp_list and pair[index - 1] not in temp_list:
                         x1, y1 = value
-                        x2, y2 = pair[::-1][index - 1]
+                        x2, y2 = pair[index - 1]
+                        # print(x1,y1,x2,y2,index)
                         self.controller.swipe(x1, y1, x2, y2, 200)
                         temp_list.append((x1, y1))
                         temp_list.append((x2, y2))
@@ -158,12 +161,14 @@ class UI_controll(Stone_UI):
         xy = self.check_ruby_box()
         if xy:
             x,y = xy
+            logging.info('bot click ruby box.')
             self.controller.touch(x,y)
 
     def click_fast_mining_one(self):
         self.img_refresh()
         xy = self.check_fast_mining()
         if xy:
+            logging.info('bot try to click fast mining.')
             x,y = xy
             self.controller.touch(x,y)
             time.sleep(1)
@@ -178,6 +183,7 @@ class UI_controll(Stone_UI):
         xy = self.check_bonus_ruby()
         if xy and time.time() - self.bouns_ruby_time > 3600:
             x, y = xy
+            logging.info('bot click bonus ruby.')
             self.controller.touch(x, y)
             time.sleep(1)
             self.controller.touch(200, 565)
@@ -193,6 +199,7 @@ class UI_controll(Stone_UI):
                 if self.check_Alert_box():
                     logging.info('ad seems stock out, check after 1hr.')
                     self.bouns_ruby_time = time.time()
+                    self.controller.keyevent("04")
                 else:
                     logging.info('watching...ads. sleep for 40 sec.')
                     time.sleep(40)
