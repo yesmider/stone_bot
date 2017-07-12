@@ -14,4 +14,4 @@ select ingame key setting to middle
 
 ---------------------
 
-thank enki for get_console_output.py,use for solve building issue in pyinstaller.
+thank enki for get_console_output.py.
