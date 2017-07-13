@@ -518,11 +518,7 @@ class Stone_UI:
             return True
         else:
             return False
-    def test(self):
-        stone_table = self.__stone_table(self.img)
-        t_s = self.__stone_table_truth(stone_table)
-        return t_s
+
 
 if __name__ =="__main__":
-    UI = Stone_UI()
-    print(UI.test())
+    pass
