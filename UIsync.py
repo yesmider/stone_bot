@@ -87,7 +87,7 @@ class Stone_UI:
         alert = self.pics['alert.png']
         box = self.img[370: 390, 250: 290]
 
-        if np.equal(alert.all(),box.all()):
+        if np.array_equal(alert,box):
             return True
         else:
             return False
@@ -275,7 +275,7 @@ class Stone_UI:
             check_point = self.img[106:108,344:346]
         else:
             check_point = self.img[196:198, 344:346]
-        if np.equal(check_point.all(),mining.all()):
+        if np.array_equal(check_point,mining):
             return 'mob'
         else:
             return 'mining'
@@ -378,8 +378,9 @@ class Stone_UI:
             temp_list = []
             for pic in x:
                 pic = cv2.cvtColor(pic, cv2.COLOR_BGR2GRAY)
-                ret, pic = cv2.threshold(pic, 0, 255, cv2.THRESH_BINARY)
-                if np.array_equal(blank, pic):
+                ret, thr_pic = cv2.threshold(pic, 0, 255, cv2.THRESH_BINARY)
+                # print(pic[7,28],pic[44,28])
+                if np.array_equal(blank, thr_pic):
                     temp_list.append(0)
                 else:
                     temp_list.append(1)
@@ -517,10 +518,11 @@ class Stone_UI:
             return True
         else:
             return False
-
-
+    def test(self):
+        stone_table = self.__stone_table(self.img)
+        t_s = self.__stone_table_truth(stone_table)
+        return t_s
 
 if __name__ =="__main__":
     UI = Stone_UI()
-
-
+    print(UI.test())

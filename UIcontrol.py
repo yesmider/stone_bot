@@ -189,6 +189,7 @@ class UI_controll(Stone_UI):
             self.controller.touch(200, 565)
             time.sleep(2)
             self.img_refresh()
+            time.sleep(1)
             if self.pic[638, 95].item(0) == 19 and self.pic[638, 445].item(0) == 19:
                 logging.info('quiz pop..')
                 self.quiz_handler()
