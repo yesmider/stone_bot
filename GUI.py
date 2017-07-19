@@ -38,6 +38,7 @@ class UI(QWidget,Ui_Stone):
             self.max_sleep_box.setMinimum(self.config_min_sleep_time)
             self.min_sleep_box.setValue(self.config_min_sleep_time)
             self.min_sleep_box.setMaximum(self.config_max_sleep_time)
+            self.mining_level.setValue(self.config_mining_level)
             #init python log handler
             self.loghandler = QtHandler()
             self.loghandler.setFormatter(logging.Formatter('%(asctime)s %(funcName)s %(message)s'))
@@ -65,6 +66,7 @@ class UI(QWidget,Ui_Stone):
             self.restart_timer.valueChanged.connect(self.restart_handler)
             self.max_sleep_box.valueChanged.connect(self.max_sleep_handler)
             self.min_sleep_box.valueChanged.connect(self.min_sleep_handler)
+            self.mining_level.valueChanged.connect(self.mining_level_handler)
             #
             self.dir_string.textChanged.connect(self.dir_string_handler)
             self.dir.clicked.connect(self.push_dir)
@@ -89,6 +91,7 @@ class UI(QWidget,Ui_Stone):
             self.config_fast_mining = self.config.getboolean('config','always_fast_mining')
             self.config_max_sleep_time = int(self.config['config']['max_sleep'])
             self.config_min_sleep_time = int(self.config['config']['min_sleep'])
+            self.config_mining_level = int(self.config['config']['mining_level'])
             # if self.config_path[-1] is not "\\":
             #     self.config_path += "\\"
             #     self.config['config']['emulator_path'] = self.config_path
@@ -102,9 +105,11 @@ class UI(QWidget,Ui_Stone):
             self.restart_timer.setEnabled(True)
             self.emu_name.setEnabled(True)
             self.dir.setEnabled(True)
-            self.always_fast_mining_checker.setEnabled(True)
+            if self.config_mining_level > 0:
+                self.always_fast_mining_checker.setEnabled(True)
             self.max_sleep_box.setEnabled(True)
             self.min_sleep_box.setEnabled(True)
+            self.mining_level.setEnabled(True)
         def disable_setting_group(self):
             self.startbutton.setEnabled(False)
             self.ad_remove_checker.setEnabled(False)
@@ -115,6 +120,7 @@ class UI(QWidget,Ui_Stone):
             self.always_fast_mining_checker.setEnabled(False)
             self.max_sleep_box.setEnabled(False)
             self.min_sleep_box.setEnabled(False)
+            self.mining_level.setEnabled(False)
         @QtCore.pyqtSlot()
         def push_start(self):
             self.logtext.appendPlainText('------------START------------')
@@ -149,7 +155,7 @@ class UI(QWidget,Ui_Stone):
             try:
                 self.bot = UI_controll(self.config_path,self.config_name,ad=self.config_ad_remove,adb_mode=self.adb_test_checkBox.isTristate())
                 self.bot.main(self.config_reboot_timer,always_fast_mining=self.config_fast_mining,
-                              ran_max=self.config_max_sleep_time,ran_min=self.config_min_sleep_time)
+                              ran_max=self.config_max_sleep_time,ran_min=self.config_min_sleep_time,mining_level=self.config_mining_level)
 
             except Exception as exc:
                 logging.warning(exc)
@@ -211,7 +217,13 @@ class UI(QWidget,Ui_Stone):
             self.config['config']['min_sleep'] = str(value)
             self.config_min_sleep_time = int(self.config['config']['min_sleep'])
             self.max_sleep_box.setMinimum(self.config_min_sleep_time)
-
+        def mining_level_handler(self,value):
+            self.config['config']['mining_level'] = str(value)
+            self.config_mining_level = int(self.config['config']['mining_level'])
+            if value == 0:
+                self.always_fast_mining_checker.setEnabled(False)
+            else:
+                self.always_fast_mining_checker.setEnabled(True)
         def closeEvent(self, QCloseEvent):
             self.save()
 

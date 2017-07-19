@@ -164,7 +164,7 @@ class UI_controll(Stone_UI):
             logging.info('bot click ruby box.')
             self.controller.touch(x,y)
 
-    def click_fast_mining_one(self):
+    def click_fast_mining_one(self,level=1):
         self.img_refresh()
         xy = self.check_fast_mining()
         if xy:
@@ -174,10 +174,16 @@ class UI_controll(Stone_UI):
             time.sleep(1)
             self.img_refresh()
             if self.check_Alert_box():
-                self.controller.touch(200,565)
-                return True
+                if level > self.check_mining_text():
+                    self.controller.touch(200,565)
+                    return True
+                else:
+                    self.controller.keyevent('4')
+                    return None
             else:
                 return False
+        else:
+            return False
     def click_bonus_ruby(self):
         self.img_refresh()
         xy = self.check_bonus_ruby()
@@ -209,10 +215,12 @@ class UI_controll(Stone_UI):
                     time.sleep(1)
 
 
-    def main(self,reboot_timer,always_fast_mining = False,ran_min = 2,ran_max = 15):
+    def main(self,reboot_timer,always_fast_mining = False,ran_min = 2,ran_max = 15,mining_level = 1):
         fast_mining_time = 0
-        logging.info('bot start with setting - always_fast_mining = {} , ad_remove = {}'.format(str(always_fast_mining), str(self.ad)))
-
+        logging.info('bot start with setting - always_fast_mining = {} , ad_remove = {},mining_level = {}'
+                     ''.format(str(always_fast_mining), str(self.ad),str(mining_level)))
+        if mining_level < 1:
+            logging.info('your mining_level setting will disable the weather detection or always fast mining effect.')
         while 1:
             try:
                 active = self.check_game_active()
@@ -220,12 +228,19 @@ class UI_controll(Stone_UI):
                     self.img_refresh()
                     if self.check_mining_or_mob() == 'mining':
                         logging.info('bot is doing mining thread.')
-                        if self.check_rain() is True or always_fast_mining is True:
+                        if mining_level > 0 and (self.check_rain() is True or always_fast_mining is True):
                             self.buster = 1
                             if time.time() - fast_mining_time > 180:
                                 logging.info('bot try to click fasting mining.')
-                                if self.click_fast_mining_one():
+                                res = self.click_fast_mining_one(level=mining_level)
+                                # print(res)
+                                if res is True:
                                     fast_mining_time = time.time()
+                                elif res is None:
+                                    logging.info('mining level is {},but we detect now level more than set'
+                                                 ',check after 180 sec.'.format(mining_level))
+                                    fast_mining_time = time.time()
+
                         else:
                             self.buster = 0
                         if self.buster == 0:
