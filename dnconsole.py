@@ -90,7 +90,7 @@ class dn:
         if method == 'index' or method == 'name':
             opt = get_console_opt.get_console_output(command)
             logging.debug('killapp {} on emulator {} by {} method'.format(apk_name, n, method))
-            if opt != "":
+            if opt != ("",''):
                 raise Exception(opt)
             else:
                 raise Exception("kill app done.")

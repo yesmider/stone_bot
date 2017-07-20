@@ -469,8 +469,8 @@ class Stone_UI:
         k = list(main_vote.keys())
         logging.info('vote_result = {}'.format(v))
         ans = k[v.index(max(v))]
-        value = "{}-{}-{}-{}".format(v[0],v[1],v[2],v[3])
-        cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
+        # value = "{}-{}-{}-{}".format(v[0],v[1],v[2],v[3])
+        # cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
         return v,ans
 
     def check_rain(self):
