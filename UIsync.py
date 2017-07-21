@@ -115,7 +115,7 @@ class Stone_UI:
             return 2
 
     def check_bonus_ruby(self):
-        ruby_area = self.img[400:650, 0:80]
+        ruby_area = self.img[370:650, 0:80]
         bonus_ruby = self.pics['bonus_ruby.png']
         kp1,des1 = self.KAZE.detectAndCompute(bonus_ruby,None)
         kp2,des2 = self.KAZE.detectAndCompute(ruby_area,None)
@@ -130,7 +130,7 @@ class Stone_UI:
                 good_trainIdx = [value.trainIdx for [value] in good]
                 x = sum([kp2[idx].pt[0] for idx in good_trainIdx])/len(good)
                 y = sum([kp2[idx].pt[1] for idx in good_trainIdx])/len(good)
-                return x, y + 400
+                return x, y + 370
 
     def check_game_active(self):
         game = self.controller.get_now_activity_windows()
@@ -222,7 +222,7 @@ class Stone_UI:
         :return:  the axis of ruby box touch point
         """
         ruby_box = self.pics['box.png']
-        ruby_area = self.img[400:650,0:80]
+        ruby_area = self.img[370:650,0:80]
         sift = cv2.xfeatures2d.SIFT_create()
         kp1, des1 = sift.detectAndCompute(ruby_box, None)
         kp2, des2 = sift.detectAndCompute(ruby_area, None)
@@ -238,13 +238,13 @@ class Stone_UI:
                 good_trainIdx = [value.trainIdx for [value] in good]
                 x = sum([kp2[idx].pt[0] for idx in good_trainIdx])/len(good)
                 y = sum([kp2[idx].pt[1] for idx in good_trainIdx])/len(good)
-                return x, y + 400
+                return x, y + 370
             else:
                 return None
 
     def check_fast_mining(self):
         fast_mining = self.pics['fast_mining.png']
-        ruby_area = self.img[400:650,0:80]
+        ruby_area = self.img[370:650,0:80]
         sift = cv2.xfeatures2d.SIFT_create()
         kp1, des1 = sift.detectAndCompute(fast_mining, None)
         kp2, des2 = sift.detectAndCompute(ruby_area, None)
@@ -260,7 +260,7 @@ class Stone_UI:
                 good_trainIdx = [value.trainIdx for [value] in good]
                 x = sum([kp2[idx].pt[0] for idx in good_trainIdx])/len(good)
                 y = sum([kp2[idx].pt[1] for idx in good_trainIdx])/len(good)
-                return x, y + 400
+                return x, y + 370
             else:
                 return None
     def check_mining_or_mob(self):
