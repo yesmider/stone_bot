@@ -62,14 +62,17 @@ class Stone_UI:
             con = self.controller
             con.screenshot(filepath='/sdcard/Misc/temp.png')
             con.pull_screenshot(target_file='/sdcard/Misc/temp.png', file_name=self.temp)
+            self.img = cv2.imread(self.temp)
         else:
             self.img = screencap.adb_screen_cap()
 
+
     def img_refresh(self):
         self.screenshot()
-        if self.adb_mode is False:
-            self.img =cv2.imread(self.temp) # img in RGB
+        while self.img.any() is False:
+            self.screenshot()
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV)#in HSV
+
 
     def softmax(self, w):
             """Calculate the softmax of a list of numbers w.
@@ -375,11 +378,11 @@ class Stone_UI:
             kp1,des1 = kp,des
             kp2, des2 = self.KAZE.detectAndCompute(pic, None)
             matches = self.BF.knnMatch(des1, des2, k=2)
-            good = [m for m, n in matches if m.distance < 0.7 * n.distance]
-            if len(good) > 0.2 * len(kp1):
+            good = [m for m, n in matches if m.distance < 0.4 * n.distance]
+            if len(good)>0:
                 src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
                 dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 1.0)
                 maskmatches = mask.ravel().tolist()
                 homography = [pts for index, pts in enumerate(good) if maskmatches[index] == 1]
 
@@ -488,4 +491,5 @@ class Stone_UI:
 
 if __name__ =="__main__":
     ui = Stone_UI()
-    print(ui.check_stone_pairs())
+    print(ui.controller.get_now_activity_windows())
+    #net.supercat.stone/com.unity3d.ads.adunit.AdUnitActivity
