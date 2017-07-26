@@ -461,13 +461,21 @@ class Stone_UI:
                      3: 0,
                      4: 0}
         count = 0
+        result = []
         while count <= 50:
-            quiz, vote = self.check_quiz_pop()
+            res = self.pool.apply_async(self.check_quiz_pop,())
+            # quiz, vote = self.check_quiz_pop()
             # cv2.imwrite('quiz/{}.png'.format(time.time()), quiz)
-            for key in vote.keys():
-                main_vote[key] += vote[key]
+            # for key in vote.keys():
+            #     main_vote[key] += vote[key]
+            result.append(res)
             self.img_refresh()
             count += 1
+        for value in result:
+            quiz, vote = value.get()
+            # print(value.get())
+            for key in vote.keys():
+                main_vote[key] += vote[key]
         v = list(main_vote.values())
         k = list(main_vote.keys())
         logging.info('vote_result = {}'.format(v))

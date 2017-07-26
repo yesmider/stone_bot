@@ -1,1 +1,1 @@
-kill app done.
+'NoneType' object has no attribute 'any'

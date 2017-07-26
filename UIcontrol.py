@@ -135,7 +135,7 @@ class UI_controll(Stone_UI):
                         x1, y1 = value
                         x2, y2 = pair[index - 1]
                         # print(x1,y1,x2,y2,index)
-                        self.controller.swipe(x1, y1, x2, y2, 200)
+                        self.controller.swipe(x1, y1, x2, y2, 250)
                         temp_list.append((x1, y1))
                         temp_list.append((x2, y2))
                 loggingstring += "."
