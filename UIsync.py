@@ -16,8 +16,8 @@ class Stone_UI:
     this class is for UI detection
     """
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\', emulator_name="1", ad=False,adb_mode = False):
-        cpu_number = multiprocessing.cpu_count()
-        self.pool = ThreadPool(processes=cpu_number)
+        self.cpu_number = multiprocessing.cpu_count()
+
         self.controller = elem.controller(dnpath,emulator_name)
         self.temp = 'temp\\temp.png'
         self.ad = ad
@@ -69,7 +69,7 @@ class Stone_UI:
 
     def img_refresh(self):
         self.screenshot()
-        while self.img.any() is False:
+        while self.img is None:
             self.screenshot()
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV)#in HSV
 
@@ -102,11 +102,11 @@ class Stone_UI:
         else:
             logging.info('Nothing.')
             return False
-
+    # break
     def check_mining_text(self):
         text = self.img[410:535,125:415]
-        fast_mining = self.pics['fast_mining_text.png']
-        faster_mining = self.pics['faster_mining_text.png']
+        fast_mining = self.pics['fast_mining_text_cht.png']
+        faster_mining = self.pics['faster_mining_text_cht.png']
         if np.array_equal(text,fast_mining):
             logging.info('fast mining.')
             return 0
@@ -275,13 +275,6 @@ class Stone_UI:
         check_point = self.img[106:108,344:346] if self.ad is True else self.img[196:198, 344:346]
         return 'mob' if np.array_equal(check_point,mining) else 'mining'
 
-    def check_clan_windows(self):
-        """
-        check the clan title in the clan tabs
-        :return: truth
-        """
-        clan = self.pics['clan.png']
-        return True if np.array_equal(self.img[122:137,254:286],clan) else False
 
     def check_stone_box_statue(self):
         #  X = 495 1 690 720 2 745 770 3 850 880 4 900 935
@@ -291,7 +284,7 @@ class Stone_UI:
         """
         x = 495
         y_axis1 = [690,745,850,900]
-        y_axis2 = [720,770,880,935]
+        y_axis2 = [720,775,880,935]
         button_stat = [1 if self.pic[y_axis1[i],x].item(0) == 13 and self.pic[y_axis2[i],x].item(0) == 10\
                            else 0 for i in range(4)]
         COUNT = button_stat.count(1)
@@ -311,7 +304,7 @@ class Stone_UI:
         """
 
         if self.check_stone_box_statue() is False:
-            return True if self.pic[850,430].item(0) == self.pic[850,490].item(0) == 18 else False
+            return True if self.pic[843,422].item(0) == self.pic[843,500].item(0) == 18 else False
         else:
             return None
 
@@ -367,35 +360,39 @@ class Stone_UI:
         p_y = y * 56 + 56 / 2 + 680
         return p_x, p_y
 
-    def compare_stone(self,stone,stone_table):
+    def compare_stone(self,stone,mask,stone_table,masks):
         """
 
         :param stone:img from __stone_table
         :param stone_table: __stone_table result
         :return: same stone pos list
         """
-        def match(pic,kp,des):
-            kp1,des1 = kp,des
-            kp2, des2 = self.KAZE.detectAndCompute(pic, None)
-            matches = self.BF.knnMatch(des1, des2, k=2)
-            good = [m for m, n in matches if m.distance < 0.4 * n.distance]
-            if len(good)>0:
-                src_pts = np.float32([kp1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-                dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-                M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 1.0)
-                maskmatches = mask.ravel().tolist()
-                homography = [pts for index, pts in enumerate(good) if maskmatches[index] == 1]
+        pool = ThreadPool(processes=self.cpu_number)
+        def match(img,kp,des,msk):
+            kp,des = kp,des
+            msk1 = msk
+            kp2, des2 = self.KAZE.detectAndCompute(img, msk1)
+            if len(kp2)>0 and len(kp) >0:
+                matches = self.BF.knnMatch(des, des2, k=2)
+                if len(matches) > 1:
+                    good = [m for m, n in matches if m.distance < 0.4 * n.distance]
+                    if len(good) > 0:
+                        src_pts = np.float32([kp[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+                        dst_pts = np.float32([kp2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+                        M, h_mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 1.0)
+                        maskmatches = h_mask.ravel().tolist()
+                        homography = [pts for index, pts in enumerate(good) if maskmatches[index] == 1]
 
-                if len(homography) > 0.7 * len(good):
-                    return True
+                        if len(homography) > 0.7 * len(good):
+                            return True
             return False
-        kp1,des1 = self.KAZE.detectAndCompute(stone,None)
+        kp1,des1 = self.KAZE.detectAndCompute(stone,mask)
         results = []
         results_append = results.append
-        for list in stone_table:
+        for y,list in enumerate(stone_table):
             temp = []
             temp_append = temp.append
-            for pic in list:
+            for x,pic in enumerate(list):
                 # kp2, des2 = self.KAZE.detectAndCompute(pic, None)
                 # matches = self.BF.knnMatch(des1, des2, k=2)
                 # good = [m for m,n in matches if m.distance < 0.7 * n.distance]
@@ -407,10 +404,12 @@ class Stone_UI:
                 #     homography = [pts for index,pts in enumerate(good) if maskmatches[index] == 1]
                 #
                 #     if len(homography) > 0.7 * len(good):
-                result = self.pool.apply_async(match,(pic,kp1,des1))
+                mask2 = masks[y][x]
+                result = pool.apply_async(match,(pic,kp1,des1,mask2))
                 temp_append(result)
             results_append(temp)
-
+        pool.close()
+        pool.join()
         good_index = [(x, y) for y, lis in enumerate(results) for x, value in enumerate(lis) if value.get()]
 
 
@@ -419,6 +418,16 @@ class Stone_UI:
 
         return good_index
 
+    def __pic_masks(self):
+        """
+        generate mask for matching
+        :return:
+        """
+        stone_table_hsv = self.__stone_table(self.pic)
+        masks = [[cv2.bitwise_not(cv2.inRange(pic, np.array([17, 0, 0]), np.array([18, 127, 220]))) for pic in y]
+                 for y in stone_table_hsv]
+        return masks
+
     def check_stone_pairs(self):
         """
 
@@ -426,6 +435,7 @@ class Stone_UI:
         """
         stone_table = self.__stone_table(self.img)
         truth_table = self.__stone_table_truth(stone_table)
+        masks = self.__pic_masks()
         pairs = []
         pairs_append = pairs.append
         # get pairs
@@ -438,7 +448,8 @@ class Stone_UI:
                 for x in range(len(truth_table[y])):
                     if truth_table[y][x] == 1 and (x,y) not in checked:
                         main_stone = stone_table[y][x]
-                        pair = self.compare_stone(main_stone,stone_table)
+                        mask = masks[y][x]
+                        pair = self.compare_stone(main_stone,mask,stone_table,masks)
                         count += 1
                         for xy in pair:
                             if xy not in checked:
@@ -456,6 +467,7 @@ class Stone_UI:
 
         :return:
         """
+        pool = ThreadPool(processes=self.cpu_number)
         main_vote = {1: 0,
                      2: 0,
                      3: 0,
@@ -463,7 +475,7 @@ class Stone_UI:
         count = 0
         result = []
         while count <= 50:
-            res = self.pool.apply_async(self.check_quiz_pop,())
+            res = pool.apply_async(self.check_quiz_pop,())
             # quiz, vote = self.check_quiz_pop()
             # cv2.imwrite('quiz/{}.png'.format(time.time()), quiz)
             # for key in vote.keys():
@@ -471,6 +483,7 @@ class Stone_UI:
             result.append(res)
             self.img_refresh()
             count += 1
+
         for value in result:
             quiz, vote = value.get()
             # print(value.get())
@@ -480,6 +493,8 @@ class Stone_UI:
         k = list(main_vote.keys())
         logging.info('vote_result = {}'.format(v))
         ans = k[v.index(max(v))]
+        pool.close()
+        pool.join()
         # value = "{}-{}-{}-{}".format(v[0],v[1],v[2],v[3])
         # cv2.imwrite('ans/{}--{}.png'.format(ans,value), self.img)
         return v,ans
@@ -495,9 +510,10 @@ class Stone_UI:
             return True
         else:
             return False
-
-
+    def test(self):
+        cv2.imwrite('faster_mining_text_cht.png',self.img[410:535, 125:415])
 if __name__ =="__main__":
     ui = Stone_UI()
-    print(ui.controller.get_now_activity_windows())
+    ui.test()
+    # print(ui.controller.get_now_activity_windows())
     #net.supercat.stone/com.unity3d.ads.adunit.AdUnitActivity

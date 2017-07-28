@@ -25,7 +25,7 @@ if path[-1] is not "\\":
 
 # main thread
 MODE = 1
-UI = UIcontrol.UI_controll(path,name)
+UI = UIcontrol.UI_controll(path,name,adb_mode=False)
 UI.main(reboot_timer,ad_remove)
 # # try:
 #     UI = UIcontrol.UI_controll(path,name)
