@@ -14,7 +14,7 @@ class UI_controll(Stone_UI):
         self.START_TIMER = time.time()
         self.main_locker = 0
         self.buster = 0
-        self.bouns_ruby_time = 0
+        self.bonus_ruby_time = 0
     def get_reward(self):
         if self.check_reward_statue():
             logging.info('get reward.')
@@ -35,7 +35,7 @@ class UI_controll(Stone_UI):
         }
         v,ans = self.vote_quiz()
         std = np.std(v)
-        m = max(v)
+        # m = max(v)
         mean = np.mean(v)
         logging.info('First solve got std = {},mean = {}'.format(std,mean))
 
@@ -140,21 +140,6 @@ class UI_controll(Stone_UI):
                         temp_list.append((x2, y2))
                 loggingstring += "."
 
-    def Clan_exp_up(self):
-        if self.clan_exp - time.time() > 10800 or self.clan_exp == 0:
-            self.controller.touch(388, 234)
-            time.sleep(2)
-            self.img_refresh()
-            if self.check_clan_windows():
-                #print(self.pic[590,190])
-                #[18, 169, 118]
-                if all(self.pic[590, 190] == np.array([18, 169, 118])):
-                    self.clan_exp = time.time()
-                    self.controller.keyevent("04")
-                else:
-                    self.clan_exp = time.time()
-                    self.controller.touch(190, 590)
-                    self.controller.keyevent("04")
 
     def click_ruby_box(self):
         self.img_refresh()
@@ -184,10 +169,11 @@ class UI_controll(Stone_UI):
                 return False
         else:
             return False
+
     def click_bonus_ruby(self):
         self.img_refresh()
         xy = self.check_bonus_ruby()
-        if xy and time.time() - self.bouns_ruby_time > 3600:
+        if xy and time.time() - self.bonus_ruby_time > 3600:
             x, y = xy
             logging.info('bot click bonus ruby.')
             self.controller.touch(x, y)
@@ -205,7 +191,7 @@ class UI_controll(Stone_UI):
                 # print(self.check_Alert_box())
                 if self.check_Alert_box():
                     logging.info('ad seems stock out, check after 1hr.')
-                    self.bouns_ruby_time = time.time()
+                    self.bonus_ruby_time = time.time()
                     self.controller.keyevent("04")
                 else:
                     logging.info('watching...ads. sleep for 40 sec.')
@@ -217,11 +203,13 @@ class UI_controll(Stone_UI):
 
     def main(self,reboot_timer,always_fast_mining = False,ran_min = 2,ran_max = 15,mining_level = 1):
         fast_mining_time = 0
+        self.run = 1
         logging.info('bot start with setting - always_fast_mining = {} , ad_remove = {},mining_level = {}'
                      ''.format(str(always_fast_mining), str(self.ad),str(mining_level)))
         if mining_level < 1:
             logging.info('your mining_level setting will disable the weather detection or always fast mining effect.')
-        while 1:
+        while self.run:
+
             try:
                 active = self.check_game_active()
                 if active is True:
@@ -253,7 +241,6 @@ class UI_controll(Stone_UI):
                         logging.info('sleeping {} sec this run.'.format(ran))
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
-                        # self.Clan_exp_up()
                         self.get_reward()
                         self.click_ruby_box()
                         self.click_bonus_ruby()
@@ -266,7 +253,6 @@ class UI_controll(Stone_UI):
                         logging.info('sleeping {} sec this run.'.format(ran))
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
-                        # self.Clan_exp_up()
                         self.get_reward()
                         self.click_ruby_box()
                         self.click_bonus_ruby()
@@ -295,7 +281,7 @@ class UI_controll(Stone_UI):
                 with open('error.txt', 'w+') as errorfile:
                         errorfile.write(str(error))
                         time.sleep(5)
-
+        return 0
     def REBOOT(self,reboot_time):
         """
         emulator reboot
@@ -315,7 +301,8 @@ class UI_controll(Stone_UI):
                 time.sleep(15)
             self.START_TIMER = time.time()
 
-
+    def exit(self):
+        self.run = 0
 
 
 

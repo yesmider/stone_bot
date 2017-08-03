@@ -99,8 +99,20 @@ class dn:
     # def runninglist:
     #
 
-    # def list2:
-    #
+    def list2(self):
+        command = self.root+'list2 '
+        opt,err = get_console_opt.get_console_output(command)
+        logging.debug('dnconsole list2')
+        emulator_dict = {
+        }
+        if opt != "":
+            lines = opt.split('\r\n')
+            for line in lines:
+                if line != "":
+                    index,name,_,_,_,_,_= line.split(',')
+                    emulator_dict[name] = index
+            return emulator_dict
+
     # def add:
     #
     # def copy:
@@ -132,4 +144,4 @@ class dn:
 if __name__ == "__main__":
     root = "C:\ChangZhi2\dnplayer2\\"
     dd = dn(root)
-    dd.isrunning('name',1)
+    dd.list2()

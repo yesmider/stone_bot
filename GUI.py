@@ -5,6 +5,7 @@ import sys
 from UIcontrol import UI_controll
 import logging
 import configparser
+import gc
 # import for pyinstaller build
 import PyQt5.uic.pyuic
 
@@ -53,7 +54,8 @@ class UI(QWidget,Ui_Stone):
 
 
             #start thread
-            self.main_thread = Worker(self.main,())
+            # self.main_thread = Worker(self.main,())
+            self.main_thread = Main_Thread()
             #connect
             self.startbutton.clicked.connect(self.push_start)
             self.pausebutton.clicked.connect(self.push_pause)
@@ -72,7 +74,10 @@ class UI(QWidget,Ui_Stone):
             self.dir.clicked.connect(self.push_dir)
             #
             self.emu_name.textChanged.connect(self.emu_name_handler)
-
+            #
+            self.main_thread.signal.connect(self.print_log)
+            self.main_thread.started.connect(self.disable_setting_group)
+            self.main_thread.finished.connect(self.enable_setting_group)
         def read_config(self):
             self.config = configparser.ConfigParser()
             # config file decoding
@@ -123,16 +128,16 @@ class UI(QWidget,Ui_Stone):
             self.mining_level.setEnabled(False)
         @QtCore.pyqtSlot()
         def push_start(self):
-            self.logtext.appendPlainText('------------START------------')
-            self.main_thread.start()
-            self.disable_setting_group()
+            self.main_thread.main(self.config_path,self.config_name,ad=self.config_ad_remove,
+                                  adb=self.adb_test_checkBox.isChecked(),timer=self.config_reboot_timer,
+                                  fast_mining=self.config_fast_mining,ran_max=self.config_max_sleep_time,
+                                  ran_min=self.config_min_sleep_time,mining_level=self.config_mining_level)
+            # self.disable_setting_group()
 
         @QtCore.pyqtSlot()
         def push_pause(self):
-            self.logtext.appendPlainText('------------PAUSE------------')
-            self.main_thread.terminate()
-            self.enable_setting_group()
-
+            self.main_thread.stop()
+            # self.enable_setting_group()
         @QtCore.pyqtSlot()
         def push_dir(self):
             dir = QFileDialog.getExistingDirectory(self,'path')
@@ -150,17 +155,17 @@ class UI(QWidget,Ui_Stone):
         def print_log(self,msg):
             self.logtext.appendPlainText(msg)
 
-        @QtCore.pyqtSlot()
-        def main(self):
-            try:
-                self.bot = UI_controll(self.config_path,self.config_name,ad=self.config_ad_remove,adb_mode=self.adb_test_checkBox.isChecked())
-                self.bot.main(self.config_reboot_timer,always_fast_mining=self.config_fast_mining,
-                              ran_max=self.config_max_sleep_time,ran_min=self.config_min_sleep_time,mining_level=self.config_mining_level)
-
-            except Exception as exc:
-                logging.warning(exc)
-                self.enable_setting_group()
-
+        # @QtCore.pyqtSlot()
+        # def main(self):
+        #     try:
+        #         bot = UI_controll(self.config_path,self.config_name,ad=self.config_ad_remove,
+        #                           adb_mode=self.adb_test_checkBox.isChecked())
+        #         bot.main(self.config_reboot_timer,always_fast_mining=self.config_fast_mining,
+        #                       ran_max=self.config_max_sleep_time,ran_min=self.config_min_sleep_time,mining_level=self.config_mining_level)
+        #
+        #     except Exception as exc:
+        #         logging.warning(exc)
+        #         self.enable_setting_group()
 
         @QtCore.pyqtSlot()
         def debug(self):
@@ -236,6 +241,32 @@ class Worker(QtCore.QThread):
     def run(self):
         self.func(*self.args)
 
+class Main_Thread(QtCore.QThread):
+    signal = QtCore.pyqtSignal(str)
+    def __init__(self):
+        super(Main_Thread,self).__init__()
+
+    def main(self,path,name,ad,adb,timer,fast_mining,ran_min,ran_max,mining_level):
+        self.onStart()
+        self.bot = UI_controll(path,name,ad,adb)
+        self.timer = timer
+        self.fast_mining = fast_mining
+        self.ran_min = ran_min
+        self.ran_max = ran_max
+        self.mining_level = mining_level
+        self.start()
+    def run(self):
+        self.bot.main(self.timer,always_fast_mining=self.fast_mining,ran_min=self.ran_min,ran_max=self.ran_max
+                      ,mining_level=self.mining_level)
+    def stop(self):
+        self.bot.exit()
+        self.finished.connect(self.onStop)
+    def onStop(self):
+        self.signal.emit('--------------STOP-------------')
+        gc.collect()
+        #del self.bot
+    def onStart(self):
+        self.signal.emit('--------------START-------------')
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     windows = UI()

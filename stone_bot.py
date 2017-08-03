@@ -35,6 +35,7 @@ class Ui_Stone(object):
         self.logtext.setGeometry(QtCore.QRect(0, 0, 361, 471))
         self.logtext.viewport().setProperty("cursor", QtGui.QCursor(QtCore.Qt.IBeamCursor))
         self.logtext.setReadOnly(True)
+        self.logtext.setMaximumBlockCount(1024)
         self.logtext.setCenterOnScroll(True)
         self.logtext.setObjectName("logtext")
         self.tab_widget.addTab(self.log, "")
@@ -107,7 +108,7 @@ class Ui_Stone(object):
         self.restart_label.setBuddy(self.restart_timer)
 
         self.retranslateUi(Stone)
-        self.tab_widget.setCurrentIndex(1)
+        self.tab_widget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(Stone)
         Stone.setTabOrder(self.tab_widget, self.startbutton)
         Stone.setTabOrder(self.startbutton, self.pausebutton)

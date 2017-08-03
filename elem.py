@@ -114,8 +114,11 @@ class controller(Element):
     def kill_app(self,apk):
         self.dn.killapp('name',self.device,apk)
 
-
-
+    def get_port_by_name(self,name):
+        emulator_list = self.dn.list2()
+        index = emulator_list[name]
+        port = int(index)*2+5555
+        return port
 
 
 
@@ -123,18 +126,6 @@ class controller(Element):
 
 if __name__ == "__main__":
     root = "C:\ChangZhi2\dnplayer2\\"
-    con = controller(root,"3")
-    #con.pull('/sdcard/pictures/screenshots','screenshots')
-    con.clean_background()
-    # for i in range(1,50):
-    #     con.screenshot()
-    #     con.pull(i)
-    #     image = cv2.imread(str(i)+".png")
-    #     crop = image[7:31,324:425]
-    #     gray_image = cv2.cvtColor(crop,cv2.COLOR_BGR2GRAY)
-    #     ret,binary = cv2.threshold(gray_image,127,255,cv2.THRESH_BINARY)
-    #     cv2.imwrite(str(i)+'.png', binary)
-    #     cv2.imwrite(str(i)+"-1.png",gray_image)
 
 
 
