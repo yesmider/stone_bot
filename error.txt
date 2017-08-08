@@ -1,1 +1,1 @@
-kill app done.
+module 'cv2.cv2' has no attribute 'xfeatures2d'

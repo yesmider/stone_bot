@@ -500,10 +500,11 @@ class Stone_UI:
             BF = cv2.BFMatcher()
             kp1, des1, hist_3channal1 = d1
             kp2, des2, hist_3channal2 = d2
+
             def color_compare(hist1,hist2):
                 for i in range(3):
                     res = cv2.compareHist(hist1[i], hist2[i], cv2.HISTCMP_CORREL)
-                    if res < 0.8:
+                    if res < 0.7:
                         return False
                 return True
 
@@ -537,7 +538,6 @@ class Stone_UI:
             pairs = []
             for y,lis in enumerate(kp_des_hist):
                 for x,data in enumerate(lis):
-
                     pair = []
                     if data and (x,y) not in checked:
                         for y1,lis1 in enumerate(kp_des_hist):
@@ -562,7 +562,7 @@ class Stone_UI:
             return pairs
 if __name__ =="__main__":
     ui = Stone_UI(emulator_name='2')
-    print(ui.check_stone_pairs())
+    # print(ui.check_ruby_box())
 
     # print(ui.controller.get_now_activity_windows())
     #net.supercat.stone/com.unity3d.ads.adunit.AdUnitActivity

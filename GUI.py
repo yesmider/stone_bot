@@ -40,6 +40,8 @@ class UI(QWidget,Ui_Stone):
             self.min_sleep_box.setValue(self.config_min_sleep_time)
             self.min_sleep_box.setMaximum(self.config_max_sleep_time)
             self.mining_level.setValue(self.config_mining_level)
+            self.adb_test_checkBox.setChecked(self.config_adb_mode)
+            self.weather_report_check_box.setChecked(self.config_weather_report)
             #init python log handler
             self.loghandler = QtHandler()
             self.loghandler.setFormatter(logging.Formatter('%(asctime)s %(funcName)s %(message)s'))
@@ -64,6 +66,8 @@ class UI(QWidget,Ui_Stone):
             self.DEBUG.clicked.connect(self.debug)
             self.ad_remove_checker.clicked.connect(self.ad_remove_handler)
             self.always_fast_mining_checker.clicked.connect(self.fast_mining_handler)
+            self.adb_test_checkBox.clicked.connect(self.adb_mode_handler)
+            self.weather_report_check_box.clicked.connect(self.weather_report_handler)
             #
             self.restart_timer.valueChanged.connect(self.restart_handler)
             self.max_sleep_box.valueChanged.connect(self.max_sleep_handler)
@@ -97,6 +101,8 @@ class UI(QWidget,Ui_Stone):
             self.config_max_sleep_time = int(self.config['config']['max_sleep'])
             self.config_min_sleep_time = int(self.config['config']['min_sleep'])
             self.config_mining_level = int(self.config['config']['mining_level'])
+            self.config_adb_mode = self.config.getboolean('config','adb_mode')
+            self.config_weather_report = self.config.getboolean('config', 'weather_report')
             # if self.config_path[-1] is not "\\":
             #     self.config_path += "\\"
             #     self.config['config']['emulator_path'] = self.config_path
@@ -115,6 +121,7 @@ class UI(QWidget,Ui_Stone):
             self.max_sleep_box.setEnabled(True)
             self.min_sleep_box.setEnabled(True)
             self.mining_level.setEnabled(True)
+            self.weather_report_check_box.setEnabled(True)
         def disable_setting_group(self):
             self.startbutton.setEnabled(False)
             self.ad_remove_checker.setEnabled(False)
@@ -126,18 +133,20 @@ class UI(QWidget,Ui_Stone):
             self.max_sleep_box.setEnabled(False)
             self.min_sleep_box.setEnabled(False)
             self.mining_level.setEnabled(False)
+            self.weather_report_check_box.setEnabled(False)
         @QtCore.pyqtSlot()
         def push_start(self):
             self.main_thread.main(self.config_path,self.config_name,ad=self.config_ad_remove,
-                                  adb=self.adb_test_checkBox.isChecked(),timer=self.config_reboot_timer,
+                                  adb=self.config_adb_mode,timer=self.config_reboot_timer,
                                   fast_mining=self.config_fast_mining,ran_max=self.config_max_sleep_time,
-                                  ran_min=self.config_min_sleep_time,mining_level=self.config_mining_level)
-            # self.disable_setting_group()
+                                  ran_min=self.config_min_sleep_time,mining_level=self.config_mining_level,
+                                  weather_report=self.config_weather_report)
+
 
         @QtCore.pyqtSlot()
         def push_pause(self):
             self.main_thread.stop()
-            # self.enable_setting_group()
+
         @QtCore.pyqtSlot()
         def push_dir(self):
             dir = QFileDialog.getExistingDirectory(self,'path')
@@ -222,6 +231,7 @@ class UI(QWidget,Ui_Stone):
             self.config['config']['min_sleep'] = str(value)
             self.config_min_sleep_time = int(self.config['config']['min_sleep'])
             self.max_sleep_box.setMinimum(self.config_min_sleep_time)
+        @QtCore.pyqtSlot(int)
         def mining_level_handler(self,value):
             self.config['config']['mining_level'] = str(value)
             self.config_mining_level = int(self.config['config']['mining_level'])
@@ -229,44 +239,67 @@ class UI(QWidget,Ui_Stone):
                 self.always_fast_mining_checker.setEnabled(False)
             else:
                 self.always_fast_mining_checker.setEnabled(True)
+        @QtCore.pyqtSlot()
+        def weather_report_handler(self):
+            if self.weather_report_check_box.checkState():
+                self.config['config']['weather_report'] = 'True'
+            else:
+                self.config['config']['weather_report'] = 'False'
+            self.config.getboolean('config', 'weather_report')
+        @QtCore.pyqtSlot()
+        def adb_mode_handler(self):
+            if self.adb_test_checkBox.checkState():
+                self.config['config']['adb_mode'] = 'True'
+            else:
+                self.config['config']['adb_mode'] = 'False'
+            self.config.getboolean('config','adb_mode')
         def closeEvent(self, QCloseEvent):
             self.save()
-
-class Worker(QtCore.QThread):
-    def __init__(self, func, args):
-        super(Worker, self).__init__()
-        self.func = func
-        self.args = args
-
-    def run(self):
-        self.func(*self.args)
 
 class Main_Thread(QtCore.QThread):
     signal = QtCore.pyqtSignal(str)
     def __init__(self):
         super(Main_Thread,self).__init__()
-
-    def main(self,path,name,ad,adb,timer,fast_mining,ran_min,ran_max,mining_level):
+        self.path = None
+        self.name = None
+        self.ad = None
+        self.adb = None
+        self.timer = None
+        self.fast_mining = None
+        self.ran_min = None
+        self.ran_max = None
+        self.mining_level = None
+        self.weather_report = None
+    def main(self,path,name,ad,adb,timer,fast_mining,ran_min,ran_max,mining_level,weather_report):
         self.onStart()
-        self.bot = UI_controll(path,name,ad,adb)
+        self.path = path
+        self.name = name
+        self.ad = ad
+        self.adb = adb
         self.timer = timer
         self.fast_mining = fast_mining
         self.ran_min = ran_min
         self.ran_max = ran_max
         self.mining_level = mining_level
+        self.weather_report = weather_report
         self.start()
+
     def run(self):
+        self.bot = UI_controll(self.path, self.name, self.ad, self.adb)
         self.bot.main(self.timer,always_fast_mining=self.fast_mining,ran_min=self.ran_min,ran_max=self.ran_max
-                      ,mining_level=self.mining_level)
+                      ,mining_level=self.mining_level,weather_report=self.weather_report)
+
     def stop(self):
         self.bot.exit()
         self.finished.connect(self.onStop)
+
     def onStop(self):
         self.signal.emit('--------------STOP-------------')
         gc.collect()
-        #del self.bot
+
     def onStart(self):
         self.signal.emit('--------------START-------------')
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     windows = UI()

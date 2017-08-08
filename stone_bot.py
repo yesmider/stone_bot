@@ -104,11 +104,14 @@ class Ui_Stone(object):
         self.mining_level_doc = QtWidgets.QLabel(self.setting)
         self.mining_level_doc.setGeometry(QtCore.QRect(270, 10, 191, 21))
         self.mining_level_doc.setObjectName("mining_level_doc")
+        self.weather_report_check_box = QtWidgets.QCheckBox(self.setting)
+        self.weather_report_check_box.setGeometry(QtCore.QRect(10, 230, 73, 41))
+        self.weather_report_check_box.setObjectName("weather_report_check_box")
         self.tab_widget.addTab(self.setting, "")
         self.restart_label.setBuddy(self.restart_timer)
 
         self.retranslateUi(Stone)
-        self.tab_widget.setCurrentIndex(0)
+        self.tab_widget.setCurrentIndex(1)
         QtCore.QMetaObject.connectSlotsByName(Stone)
         Stone.setTabOrder(self.tab_widget, self.startbutton)
         Stone.setTabOrder(self.startbutton, self.pausebutton)
@@ -139,5 +142,6 @@ class Ui_Stone(object):
         self.adb_test_checkBox.setText(_translate("Stone", "adb test mode"))
         self.mining_level_label.setText(_translate("Stone", "快礦等級"))
         self.mining_level_doc.setText(_translate("Stone", "0 代表不開 1等於藍 2等於紅"))
+        self.weather_report_check_box.setText(_translate("Stone", "回報天氣"))
         self.tab_widget.setTabText(self.tab_widget.indexOf(self.setting), _translate("Stone", "設定"))
 

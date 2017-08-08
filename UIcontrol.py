@@ -3,18 +3,17 @@ import logging
 import time
 import random
 import numpy as np
-
+import requests
 class UI_controll(Stone_UI):
 
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\',emulator_name = "1",ad=False,adb_mode=False):
         super(UI_controll,self).__init__(dnpath,emulator_name,ad=ad,adb_mode=adb_mode)
+        # for UI statue.
         self.auto_attack = 0
-        self.toggle = False
-        self.clan_exp = 0
         self.START_TIMER = time.time()
-        self.main_locker = 0
         self.buster = 0
         self.bonus_ruby_time = 0
+        self.run = 1
     def get_reward(self):
         if self.check_reward_statue():
             logging.info('get reward.')
@@ -67,7 +66,7 @@ class UI_controll(Stone_UI):
         # else:
         #     print('need human detect')
 
-    def close_pop_box(self,solve_quiz = True):
+    def close_pop_box(self, solve_quiz=True):
         self.img_refresh()
         count = 0
         while self.check_pop_box_statue() and self.check_game_active():
@@ -125,10 +124,10 @@ class UI_controll(Stone_UI):
 
         if len(pairs) > 0:
             temp_list = []
-            loggingstring = 'combining.'
+            logging_string = 'combining.'
             for pair in pairs:
-                logging.info(loggingstring)
-                pair.sort(key=lambda k:k[1] , reverse=True)
+                logging.info(logging_string)
+                pair.sort(key=lambda k:k[1], reverse=True)
                 # print(pair)
                 for index, value in enumerate(pair):
                     if value not in temp_list and pair[index - 1] not in temp_list:
@@ -138,7 +137,7 @@ class UI_controll(Stone_UI):
                         self.controller.swipe(x1, y1, x2, y2, 250)
                         temp_list.append((x1, y1))
                         temp_list.append((x2, y2))
-                loggingstring += "."
+                logging_string += "."
 
 
     def click_ruby_box(self):
@@ -200,23 +199,27 @@ class UI_controll(Stone_UI):
                     self.controller.keyevent("04")
                     time.sleep(1)
 
-
-    def main(self,reboot_timer,always_fast_mining = False,ran_min = 2,ran_max = 15,mining_level = 1):
+    def main(self,reboot_timer, always_fast_mining=False, ran_min=2, ran_max=15, mining_level=1, weather_report=False):
         fast_mining_time = 0
-        self.run = 1
+
         logging.info('bot start with setting - always_fast_mining = {} , ad_remove = {},mining_level = {}'
                      ''.format(str(always_fast_mining), str(self.ad),str(mining_level)))
         if mining_level < 1:
             logging.info('your mining_level setting will disable the weather detection or always fast mining effect.')
         while self.run:
-
             try:
                 active = self.check_game_active()
                 if active is True:
                     self.img_refresh()
+                    weather_statue = self.check_rain()
+                    if weather_report is True and self.check_pop_box_statue() is False:
+                        if weather_statue is True:
+                            self.push_weather(1)
+                        elif weather_statue is False:
+                            self.push_weather(2)
                     if self.check_mining_or_mob() == 'mining':
                         logging.info('bot is doing mining thread.')
-                        if mining_level > 0 and (self.check_rain() is True or always_fast_mining is True):
+                        if mining_level > 0 and (weather_statue is True or always_fast_mining is True):
                             self.buster = 1
                             if time.time() - fast_mining_time > 180:
                                 logging.info('bot try to click fasting mining.')
@@ -234,10 +237,7 @@ class UI_controll(Stone_UI):
                         if self.buster == 0:
                             ran = random.randint(ran_min, ran_max)
                         else:
-                            if always_fast_mining is True:
-                                ran = random.randint(ran_min,ran_max)
-                            else:
-                                ran = 1
+                            ran = 1
                         logging.info('sleeping {} sec this run.'.format(ran))
                         self.close_pop_box()
                         self.Turn_on_auto_attack()
@@ -278,10 +278,19 @@ class UI_controll(Stone_UI):
                 time.sleep(15)
             except Exception as error:
                 logging.error(error)
-                with open('error.txt', 'w+') as errorfile:
+                with open('error.txt', 'a') as errorfile:
                         errorfile.write(str(error))
                         time.sleep(5)
         return 0
+
+    def push_weather(self,weather_value):
+        headers = {'user-agent': 'stone-bot'}
+        try:
+            r = requests.post('http://localhost:5000/push_weather',data={'weather':str(weather_value)},headers=headers)
+            logging.info('bot try to post weather statue, get statue code {}'.format(r.status_code))
+        except requests.ConnectionError:
+            logging.info('Failed to establish a new connection.')
+
     def REBOOT(self,reboot_time):
         """
         emulator reboot
@@ -303,6 +312,8 @@ class UI_controll(Stone_UI):
 
     def exit(self):
         self.run = 0
-
-
+    
+if __name__=='__main__':
+    con = UI_controll()
+    con.push_weather(2)
 
