@@ -3,8 +3,6 @@ import re
 import tempfile
 import dnconsole
 import time
-import logging
-import cv2
 class Element:
     def __init__(self,path,name):
         self.device = name

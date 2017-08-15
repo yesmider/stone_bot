@@ -11,9 +11,11 @@ import PyQt5.uic.pyuic
 
 class QtHandler(logging.Handler,QtCore.QObject):
     signal = QtCore.pyqtSignal(str)
+
     def __init__(self):
         logging.Handler.__init__(self)
         QtCore.QObject.__init__(self)
+
     @QtCore.pyqtSlot()
     def emit(self, record):
         msg = self.format(record)
@@ -226,11 +228,13 @@ class UI(QWidget,Ui_Stone):
             self.config_max_sleep_time = int(self.config['config']['max_sleep'])
             self.min_sleep_box.setMaximum(self.config_max_sleep_time)
 
+
         @QtCore.pyqtSlot(int)
         def min_sleep_handler(self,value):
             self.config['config']['min_sleep'] = str(value)
             self.config_min_sleep_time = int(self.config['config']['min_sleep'])
             self.max_sleep_box.setMinimum(self.config_min_sleep_time)
+
         @QtCore.pyqtSlot(int)
         def mining_level_handler(self,value):
             self.config['config']['mining_level'] = str(value)
@@ -239,20 +243,23 @@ class UI(QWidget,Ui_Stone):
                 self.always_fast_mining_checker.setEnabled(False)
             else:
                 self.always_fast_mining_checker.setEnabled(True)
+
         @QtCore.pyqtSlot()
         def weather_report_handler(self):
             if self.weather_report_check_box.checkState():
                 self.config['config']['weather_report'] = 'True'
             else:
                 self.config['config']['weather_report'] = 'False'
-            self.config.getboolean('config', 'weather_report')
+            self.config_weather_report = self.config.getboolean('config', 'weather_report')
+
         @QtCore.pyqtSlot()
         def adb_mode_handler(self):
             if self.adb_test_checkBox.checkState():
                 self.config['config']['adb_mode'] = 'True'
             else:
                 self.config['config']['adb_mode'] = 'False'
-            self.config.getboolean('config','adb_mode')
+            self.config_adb_mode = self.config.getboolean('config','adb_mode')
+
         def closeEvent(self, QCloseEvent):
             self.save()
 

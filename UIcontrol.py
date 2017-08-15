@@ -139,7 +139,6 @@ class UI_controll(Stone_UI):
                         temp_list.append((x2, y2))
                 logging_string += "."
 
-
     def click_ruby_box(self):
         self.img_refresh()
         xy = self.check_ruby_box()

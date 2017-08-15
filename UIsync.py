@@ -6,18 +6,13 @@ import os
 import time
 import screencap
 from multiprocessing.pool import ThreadPool
-import multiprocessing
-#from pynput import keyboard
-# todo keyboard listener
-# todo autodetect and donate coin to clan
-
 class Stone_UI:
     """
     this class is for UI detection
     """
     def __init__(self,dnpath = 'C:\ChangZhi2\dnplayer2\\', emulator_name="1", ad=False,adb_mode = False):
-
-        self.controller = elem.controller(dnpath,emulator_name)
+        self.path = dnpath
+        self.controller = elem.controller(self.path,emulator_name)
         self.temp = 'temp\\temp.png'
         self.ad = ad
         self.adb_mode = adb_mode
@@ -25,7 +20,6 @@ class Stone_UI:
             self.port = self.controller.get_port_by_name(emulator_name)
         self.img_refresh()
         self.quiz_banner = cv2.imread('pics/quiz_banner.png')
-
         self.train_path = 'color_train'
         self.pics_path = 'pics'
         self.quiz_pics = {
@@ -34,6 +28,7 @@ class Stone_UI:
 
         }
         self.train_init()
+
     def train_init(self):
         KAZE = cv2.KAZE_create()
 
@@ -59,6 +54,7 @@ class Stone_UI:
             img = cv2.imread(full_path)
             self.pics[pic_name] = img
         logging.info('train_data_init done.')
+
     def screenshot(self):
         if self.adb_mode is False:
             con = self.controller
@@ -66,15 +62,13 @@ class Stone_UI:
             con.pull_screenshot(target_file='/sdcard/Misc/temp.png', file_name=self.temp)
             self.img = cv2.imread(self.temp)
         else:
-            self.img = screencap.adb_screen_cap(self.port)
-
+            self.img = screencap.adb_screen_cap(self.port,path=self.path)
 
     def img_refresh(self):
         self.screenshot()
         while self.img is None:
             self.screenshot()
         self.pic = cv2.cvtColor(self.img,cv2.COLOR_BGR2HSV)#in HSV
-
 
     def softmax(self, w):
             """Calculate the softmax of a list of numbers w.
@@ -105,6 +99,11 @@ class Stone_UI:
             logging.info('Nothing.')
             return False
     # break
+
+    def get_mining_text(self):
+        text = self.img[410:535, 125:415]
+        cv2.imwrite('faster_mining_text_cht.png',text)
+
     def check_mining_text(self):
         text = self.img[410:535,125:415]
         fast_mining = self.pics['fast_mining_text_cht.png']
@@ -147,8 +146,6 @@ class Stone_UI:
             return None
         else:
             return False
-
-
 
     def check_ruby_box(self):
         """
@@ -205,7 +202,6 @@ class Stone_UI:
         mining = self.pics['mining.png']
         check_point = self.img[106:108,344:346] if self.ad is True else self.img[196:198, 344:346]
         return 'mob' if np.array_equal(check_point,mining) else 'mining'
-
 
     def check_stone_box_statue(self):
         #  X = 495 1 690 720 2 745 770 3 850 880 4 900 935
@@ -387,9 +383,14 @@ class Stone_UI:
 
         up = np.array([17, 0, 0])
         down = np.array([18, 127, 220])
-        masks = [[cv2.bitwise_not(cv2.inRange(pic, up, down)) for pic in y]
-                 for y in table_hsv]
-        return masks
+        masks1 = [[cv2.bitwise_not(cv2.inRange(pic, up, down)) for pic in y]for y in table_hsv]
+        # green_up = np.array([51,0,0])
+        # green_down = np.array([56,178,225])
+        # masks2 = [[cv2.bitwise_not(cv2.inRange(pic,green_up,green_down)) for pic in y]for y in table_hsv]
+        # masks = [[cv2.bitwise_xor(mask1,masks2[y][x])for x,mask1 in enumerate(lis)]for y,lis in enumerate(masks1)]
+
+        return masks1
+
     @staticmethod
     def __stone_table(pic):
         """
@@ -425,6 +426,7 @@ class Stone_UI:
             truth_append(temp_list)
         truth_table[0] = [0, 0, 0, 0, 0, 0, 0, 0]
         return truth_table
+
     @staticmethod
     def match(img1, msk1, img2, msk2):
         def color_compare(img1, mask1, img2, mask2):
@@ -453,18 +455,19 @@ class Stone_UI:
                     if len(homography) > 0.7 * len(good) and color_compare(img1, msk1, img2, msk2):
                         return True
         return False
+
     def check_stone_pairs(self):
         """
-
-        :return:
+        check stones are same or not
+        :return:list of pairs of axis on img
         """
-        def calc_kp_des_hist_by_table(table,masks,checked):
+        def calc_kp_des_hist_by_table(table, masks, checked):
             KAZE = cv2.KAZE_create()
 
-            def calc_kp_des_hist(img,mask):
+            def calc_kp_des_hist(img, mask):
                 kp,des = KAZE.detectAndCompute(img,mask)
                 hist = [cv2.calcHist([img], [0], mask, [256], [0, 256]),cv2.calcHist([img], [1], mask, [256], [0, 256]),cv2.calcHist([img], [2], mask, [256], [0, 256])]
-                return kp,des,hist
+                return kp, des, hist
 
             with ThreadPool() as pool:
                 results = []
@@ -496,17 +499,15 @@ class Stone_UI:
                     final.append(temp)
                 return final
 
-        def match(d1,d2):
+        def match(d1, d2):
             BF = cv2.BFMatcher()
             kp1, des1, hist_3channal1 = d1
             kp2, des2, hist_3channal2 = d2
 
             def color_compare(hist1,hist2):
-                for i in range(3):
-                    res = cv2.compareHist(hist1[i], hist2[i], cv2.HISTCMP_CORREL)
-                    if res < 0.7:
-                        return False
-                return True
+                ress = [cv2.compareHist(hist1[i], hist2[i], cv2.HISTCMP_CORREL) for i in range(3)]
+                avg = sum(ress)/3
+                return True if avg > 0.6 else False
 
             if len(kp2) > 2 and len(kp1) > 2:
                 matches = BF.knnMatch(des1, des2, k=2)
@@ -521,7 +522,6 @@ class Stone_UI:
                         if len(homography) > 0.7 * len(good) and color_compare(hist_3channal1,hist_3channal2):
                             return True
             return False
-
 
         stone_box_statue = self.check_stone_box_statue()
         # get pairs
@@ -560,9 +560,17 @@ class Stone_UI:
             t1 = time.time()
             logging.info('Spend {} sec for compute stone {} pair'.format(t1-t,count))
             return pairs
-if __name__ =="__main__":
-    ui = Stone_UI(emulator_name='2')
-    # print(ui.check_ruby_box())
+    def test(self):
+        hsv = self.__stone_table(self.pic)
+        masks = self.__pic_masks(hsv)
+        for y in masks:
+            for mask in y:
+                cv2.imshow('img',mask)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+if __name__ == "__main__":
+    ui = Stone_UI(emulator_name='1')
+    ui.test()
 
     # print(ui.controller.get_now_activity_windows())
     #net.supercat.stone/com.unity3d.ads.adunit.AdUnitActivity
